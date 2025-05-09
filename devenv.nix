@@ -22,6 +22,7 @@
       numpy
       pandas
       pipx
+      tshark
     '';
     uv.enable = true;
   };
