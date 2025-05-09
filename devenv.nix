@@ -7,6 +7,7 @@
   # https://devenv.sh/packages/
   packages = with pkgs; [
     duckdb
+    tshark
   ];
 
   cachix.enable = false;
@@ -22,7 +23,6 @@
       numpy
       pandas
       pipx
-      tshark
     '';
     uv.enable = true;
   };
