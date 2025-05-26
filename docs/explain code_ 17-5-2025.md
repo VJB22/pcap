@@ -149,6 +149,83 @@ Analyzes behavioral metrics for each workload:
 | `peer_count_dst >= 5` | Static | Orchestration implies high fanout |
 | `score sum == 0` → entropy fallback | Logic | Avoids division by 0 for sparse rows |
 
+# For this thesis, thresholds were applied as part of an experimental approach to feature extraction from PCAP data. These thresholds serve as a starting point, but they are not universal. The optimal thresholds depend on the specific characteristics of the dataset under analysis—particularly the context of the PCAP capture (e.g., network topology, traffic patterns, and typical workloads).
+# Experts should iteratively test and refine these thresholds based on their own data, following a test-and-adjust process or deriving thresholds empirically through exploratory analysis and statistical profiling of their datasets over time.
+
+# Why Use Percentiles Instead of Averages?
+As Dynatrace points out in this article (https://www.dynatrace.com/news/blog/why-averages-suck-and-percentiles-are-great), averages are ineffective because they oversimplify complex distributions. Percentiles provide a more accurate, multi-dimensional view of system behavior, allowing for:
+Precise detection of anomalies,
+Effective baselining and behavioral learning,
+Informed optimization of thresholds for performance and security monitoring.
+
+Percentiles are widely used in network analysis. For instance, the 95th percentile is a common standard in bandwidth metering, as discussed in:
+[NetCraftsmen,](https://netcraftsmen.com/networking-by-the-95th-percentile)
+[Auvik.](https://www.auvik.com/franklyit/blog/95th-percentile-bandwidth-metering)
+
+# 1. Payload Size > 800 Bytes
+Rationale: The Ethernet MTU is 1500 bytes. Subtracting headers (~40 bytes) leaves ~1460 bytes for payloads. Setting a threshold at 800 bytes flags unusually large payloads that may signal data exfiltration or tunneling.
+Adjustment Considerations:
+In environments with large payloads (e.g., file transfers), this threshold may trigger false positives.
+In environments with predominantly small payloads, a lower threshold may be better.
+Supporting Research:
+[ ResearchGate - NSF Study](https://par.nsf.gov/servlets/purl/10205654)
+
+# 2. Payload Rate per Destination > 0.75 Quantile
+Rationale: The 75th percentile identifies the top 25% of throughput consumers, highlighting destinations with high data rates potentially linked to exfiltration or DDoS activity.
+Adjustment Considerations:
+Use a higher percentile (e.g., 90th) in high-throughput environments to avoid false positives.
+Use a lower percentile (e.g., 60th) in low-throughput environments for sensitivity.
+Supporting Research:
+[CEUR Workshop Paper](https://ceur-ws.org/Vol-3746/Paper_7.pdf)
+
+# 3. Data Volume > 0.60 Quantile
+Rationale: The 60th percentile flags sources/destinations contributing a significant share of data volume, identifying "intensive talkers."
+Adjustment Considerations:
+In environments with high variance in data volume, consider a higher percentile.
+In uniform environments, a lower percentile might suffice.
+Supporting Research:
+[ Dynatrace](https://www.dynatrace.com/news/blog/why-averages-suck-and-percentiles-are-great)
+
+# 4. Session Volatility > 0.65 Quantile
+Rationale: Captures bursty or unstable sessions, possibly indicating scanning or probing behavior.
+Adjustment Considerations:
+Raise the threshold in noisy environments.
+Lower it in stable environments.
+Supporting Research:
+[ arXiv Preprint](https://arxiv.org/abs/0905.1983)
+
+# 5. TTL Variability > Median + Standard Deviation
+Rationale: High TTL variability may point to routing instability or virtualized networks.
+Adjustment Considerations:
+Lower the threshold in stable routing networks.
+Raise it in dynamic routing environments.
+Supporting Research:
+[ UCLA Globcom](https://web.cs.ucla.edu/~lixia/papers/98Globcom.pdf)
+
+# 6. Active Minute Count < 0.5 × Active Seconds / 60
+Rationale: Derived heuristic to detect bursty, sporadic sessions by comparing active minutes and total active seconds.
+Adjustment Considerations:
+Adjust in environments with frequent short bursts to reduce false positives.
+Supporting Research:
+ [TUM Report](https://www.net.in.tum.de/fileadmin/TUM/NET/NET-2010-06-1.pdf)
+
+# 7. MAC Source Count per IP Source > 3
+Rationale: Indicates potential IP reuse (e.g., via switches or DHCP pools).
+Adjustment Considerations:
+Use a higher threshold for dynamic IP networks.
+Lower the threshold for static environments.
+Supporting Research:
+[ Cisco Documentation](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst2960/software/release/12-2_58_se/configuration/guide/2960scg/swdhcp82.html)
+ 
+# 8. Peer Count per Destination ≥ 5
+Rationale: Suggests high fan-out, common in orchestrated environments or scanning behavior.
+Adjustment Considerations:
+Increase for microservices architectures.
+Decrease for traditional client-server models.
+Supporting Research:
+[ Cloudera Docs](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst2960/software/release/12-2_58_se/configuration/guide/2960scg/swdhcp82.html)
+
+
 ## WHAT WAS FOUND:
 
 | My Finding | How It Connects to Finding the Best Deployment Artifact |
@@ -210,4 +287,6 @@ Readings:
 
 **Summary**:  
 This draft white paper outlines a methodology for characterizing the network behavior of IoT devices. By analyzing PCAPNG files, the approach identifies communication patterns and device types, aiding in the creation of Manufacturer Usage Description (MUD) files. This characterization helps in understanding the hardware and software profiles of IoT devices based on their network traffic.
+
+
 
