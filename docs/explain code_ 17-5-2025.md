@@ -149,8 +149,8 @@ Analyzes behavioral metrics for each workload:
 | `peer_count_dst >= 5` | Static | Orchestration implies high fanout |
 | `score sum == 0` → entropy fallback | Logic | Avoids division by 0 for sparse rows |
 
-## For this thesis, thresholds were applied as part of an experimental approach to feature extraction from PCAP data. These thresholds serve as a starting point, but they are not universal. The optimal thresholds depend on the specific characteristics of the dataset under analysis—particularly the context of the PCAP capture (e.g., network topology, traffic patterns, and typical workloads).
-## Experts should iteratively test and refine these thresholds based on their own data, following a test-and-adjust process or deriving thresholds empirically through exploratory analysis and statistical profiling of their datasets over time.
+For this thesis, thresholds were applied as part of an experimental approach to feature extraction from PCAP data. These thresholds serve as a starting point, but they are not universal. The optimal thresholds depend on the specific characteristics of the dataset under analysis—particularly the context of the PCAP capture (e.g., network topology, traffic patterns, and typical workloads).
+Experts should iteratively test and refine these thresholds based on their own data, following a test-and-adjust process or deriving thresholds empirically through exploratory analysis and statistical profiling of their datasets over time.
 
 ## Why Use Percentiles Instead of Averages?
 As Dynatrace points out in this article (https://www.dynatrace.com/news/blog/why-averages-suck-and-percentiles-are-great), averages are ineffective because they oversimplify complex distributions. Percentiles provide a more accurate, multi-dimensional view of system behavior, allowing for:
