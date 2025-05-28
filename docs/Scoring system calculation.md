@@ -2,9 +2,7 @@
 
 We create a general formula where each artifact type is assigned a score profile across graph-derived features:
 
-\[
-S(n) = \sum_{i=1}^{k} w_i \cdot f_i(n)
-\]
+S(n) = ∑(i=1 to k) wᵢ ⋅ fᵢ(n)
 
 Where:
 
@@ -29,9 +27,7 @@ Where:
 
 For each node *n*:
 
-\[
-S(n) = 1.5 \cdot \deg(n) + 2.0 \cdot |C(n)| + 1.5 \cdot \text{flows}(n) - 2.0 \cdot sv(n) - 1.5 \cdot ttl(n) + 2.0 \cdot comp(n) + 1.5 \cdot bytes(n) + 2.0 \cdot external\_ratio(n)
-\]
+S(n) = 1.5 * deg(n) + 2.0 * |C(n)| + 1.5 * flows(n) - 2.0 * sv(n) - 1.5 * ttl(n) + 2.0 * comp(n) + 1.5 * bytes(n) + 2.0 * external_ratio(n)
 
 Where:
 
