@@ -8,7 +8,7 @@ Where:
 
 - **S(n)** = Artifact score for node *n*
 - **fᵢ(n)** = Graph-derived feature *i* for node *n*
-- **wᵢ** = Weight for feature *i*, aligned with artifact theory
+- **wᵢ** = Weight for feature *i*, aligned with artifact document
 
 ### Feature Mapping (Based on Cloud deployment artifact document)
 
