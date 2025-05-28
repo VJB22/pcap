@@ -27,7 +27,7 @@ Where:
 
 For each node *n*:
 
-S(n) = 1.5 * deg(n) + 2.0 * |C(n)| + 1.5 * flows(n) - 2.0 * sv(n) - 1.5 * ttl(n) + 2.0 * comp(n) + 1.5 * bytes(n) + 2.0 * external_ratio(n)
+S(n) = 1.5 * deg(n) + 2.0 * |C(n)| + 1.5 * flows(n) - 2.0 * sv(n) - 1.5 * ttl(n) + 2.0 * comp(n) + 1.5 * bytes(n) + 2.0 * external_ratio(n) + wrole * role_score(n)
 
 Where:
 
@@ -39,6 +39,8 @@ Where:
 - **comp(n)** = Component type score
 - **bytes(n)** = Total bytes sent/received
 - **external_ratio(n)** = Ratio of external flows to total flows
+- **role_score(n)** = Is the numerical score from role mining (e.g., from NMF component assignments or continuous role membership weights)
+- **wrole** = Is the weight assigned to this role feature (chosen according to its importance).
 
 ### Threshold Heuristics for Artifact Classification
 
