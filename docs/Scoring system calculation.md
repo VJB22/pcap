@@ -55,7 +55,7 @@ Where:
 
 
 ## References
-Barabási, A.-L. (2016). Network Science. Cambridge University Press. https://barabasi.com/networksciencebook/
+Barabási, A.-L. (2016). Network Science. 
 (For network metrics: degree, community size, topology patterns)
 
 Newman, M. E. J. (2010). Networks: An Introduction. Oxford University Press. https://doi.org/10.1093/acprof:oso/9780199206650.001.0001
