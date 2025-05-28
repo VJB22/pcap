@@ -1,6 +1,6 @@
 # **Cloud Deployment Artifacts and Workload Optimization**
 
-We distinguish technologies that provide environments where applications can execute and serve the purpose of running code as deployment options. All options involve the allocation and management of computing resources (CPU, memory, storage) and require network connectivity to interact with other systems and the internet. Different deployment options offer varying levels of abstraction, resource allocation, and management complexity. Understanding their characteristics helps in choosing the right approach for specific use cases. We distinguish the following models
+We distinguish technologies that provide environments where applications can execute and serve the purpose of running code as deployment options. All options involve the allocation and management of computing resources (CPU, memory, storage) and require network connectivity to interact with other systems and the internet. Different deployment options offer varying levels of abstraction, resource allocation, and management complexity. Understanding their characteristics helps in choosing the right approach for specific use cases. We distinguish the following models, derived from *industry knowledge*, *operational patterns*, and *practitioner experience* in managing complex systems:
 
 **Serverless functions** are event-driven, stateless, and scale automatically but are ephemeral.
 
@@ -12,7 +12,13 @@ We distinguish technologies that provide environments where applications can exe
 
 **Mini-VMs** (e.g., Firecracker, Kata Containers) balance security with performance, having lower overhead than full VMs.
 
-**Bare Metal servers** provide maximum control and performance but lack the flexibility of virtualization.
+**Bare Metal servers** provide maximum control and performance but lack the flexibility of virtualization. 
+
+## Industry-Grounded Heuristic Mapping
+These models are not purely theoretical: their traits reflect years of operational experience in cloud, hybrid, and datacenter environments. The mappings are derived from practical observations of system behavior, such as:
+- Stability of flows
+- Density of communication patterns
+- Burstiness and volatility
 
 | Aspect | Serverless Functions | Containers | Orchestrated Containers | Virtual Machines (VMs) | Mini-VMs (e.g., Firecracker) | Baremetal Server |
 | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
@@ -26,19 +32,20 @@ We distinguish technologies that provide environments where applications can exe
 | **Management Overhead** | Lowest (fully managed) | Moderate (manual setup) | High (orchestrator complexity) | High (OS updates, networking) | Moderate (simpler than full VMs) | Highest (full admin) |
 | **Cost Model** | Pay-per-use | Resource-based pricing | Resource-based pricing | Pay for VM uptime | Pay per lightweight VM | Fixed cost (hardware) |
 
-**Mapping Deployment Aspects to PCAPNG-Inferred Signals (with Examples)**
+**Mapping Deployment Artifact Traits to Graph-Derived Signals**
 
-| Aspect | What to Look for in PCAPNG | Why It Matters | Example Patterns |
+| Aspect | What to Look for in Graph | Why It Matters | Example Patterns |
 | :---- | :---- | :---- | :---- |
-| Abstraction Level | Graph structure (flat, tiered, dense); DNS frequency; TTL variance | Serverless \= edge bursty traffic; Containers \= dense microservice mesh; VMs \= flatter structures | Serverless: few-to-one bursty edges; Containers: dense internal cluster edges; VMs: clear tiers, fewer hops |
-| Resource Allocation | IP/MAC/port churn; connection duration; NAT/PAT reuse | Ephemeral \= short flows & dynamic reuse; Dedicated \= stable IPs and long-lived flows | Containers: same MAC used with multiple IPs; Serverless: client IPs vary with short TCP lifetimes |
-| Startup Time | Cold start latency; delayed response after idle; flow initiation delay | Millisecond-scale delays after idle suggest serverless cold starts | First packet arrives, no response for \~300–700ms → then function responds |
-| Performance | RTT, jitter, retransmits, throughput | Higher variance \= lower isolation or orchestration overhead | Orchestrated containers: occasional spikes in RTT due to shared network stack |
-| Isolation | Shared MACs/IPs, broadcast storms, ARP/NAT/PAT activity | Shared infra \= less isolation; Baremetal/VMs show clean separation | Containers: multiple nodes sharing same IP block; Baremetal: no NAT, no address overlap |
-| State Management | Stateless bursts vs. long sessions with storage/DB traffic | Serverless \= stateless; Containers/VMs \= persistent service-to-storage connections | Serverless: GET calls without session reuse; VMs: sessions followed by DB/storage flows |
-| Scaling | Sudden bursts in flow creation/removal; many connections from/to one node | Serverless and K8s scale dynamically; bursts visible as new flows rapidly appear | Orchestrated containers: pod IPs rapidly change; Serverless: API spikes with new client IPs |
-| Management Overhead | Control-plane traffic (kube-apiserver, etcd, SSH, SNMP, Ansible, etc.); service discovery protocols | Baremetal/VMs \= admin traffic; Containers \= orchestrator protocols (K8s, service mesh) | VMs: consistent SSH/Ansible config flows; K8s: etcd, kube-proxy, or CoreDNS traffic |
-| Cost Model | Flow duration, idle-to-active ratio, burst frequency | Not directly in PCAP; inferred from session patterns — short-lived \= usage-based billing (serverless) | Serverless: 100s of short flows with idle gaps; VMs: long uninterrupted flows all day |
+| Abstraction Level | Graph topology: singleton, hub, dense cluster; node degree distribution | Serverless = singleton, bursty; Containers = dense clusters; VMs = mid-size communities | Serverless: singleton nodes with few edges; Containers: densely connected clusters; VMs: flatter, tiered graph structures |
+| Resource Allocation | Node degree; community size; flow count per node | High degree & flows = dedicated (baremetal/VM); low = shared resources (containers, serverless) | Baremetal: high degree, stable flows; Serverless: low degree, low flows; Containers: moderate degree, variable flows |
+| Startup Time | Flow initiation patterns; delays after idle; graph burstiness | Serverless shows cold starts: bursty, delayed flows; VMs and containers show consistent flows | Serverless: isolated edges appearing after idle period; VMs: stable edges; Containers: small, frequent bursts |
+| Performance | Degree variance; betweenness centrality; clustering coefficient | High variance → orchestration/shared infra; stable metrics → baremetal/VMs | Orchestrated containers: variable degrees, moderate clustering; Baremetal: stable, high degree nodes |
+| Isolation | Node uniqueness (MAC/IP mappings inferred via graph roles); community separation | Unique nodes = higher isolation (baremetal/VMs); shared = containers/serverless | Containers: dense, shared clusters; Baremetal: isolated, non-overlapping nodes |
+| State Management | Flow persistence; burst vs. sustained edges | Serverless = short, bursty flows; Containers/VMs = persistent flows with stateful services | Serverless: short-lived edges, no re-use; VMs: edges persisting across time intervals |
+| Scaling | Graph growth patterns; community size change over time | Rapid graph expansion/contraction → dynamic scaling (serverless/containers); static → baremetal/VM | Orchestrated: community size fluctuates; Serverless: singleton nodes appearing/disappearing; Baremetal: stable node count |
+| Management Overhead | Presence of control-plane nodes (identified via roles); central hubs | Baremetal/VMs → admin/control plane traffic; Containers → orchestration control nodes (K8s) | VMs: admin nodes with stable connections; K8s: etcd/CoreDNS; Serverless: minimal control-plane structure |
+| Cost Model | Session duration; flow frequency; burstiness | Short-lived, bursty flows → usage-based (serverless); stable, long flows → reserved (VMs, baremetal) | Serverless: high churn, idle periods; VMs: sustained flows over time; Containers: moderate churn |
+
 
 **Bare Metal Servers** provide direct access to physical hardware and full control over server infrastructure. From an application perspective bare metal servers offer the highest performance, the lowest overhead and the highest level of security isolation, but require the most manual management. Bare metal servers are used for high-performance computing, applications with specific hardware requirements and workloads needing consistent, predictable performance.
 
