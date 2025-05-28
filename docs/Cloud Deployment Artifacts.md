@@ -1,3 +1,6 @@
+
+### BACKBONE OF INDUSTRIAL KNOWLEDGE OF TRANSDICAPLINARY RESEARCH -> BRIDGE INTO ACADEMIA VIA METHODOLOGY -> NETWORK SCIENCE METHODS -> FIND A WAY TO CREATE SCORING SYSTEM: QUANTIFY QUALITATIVE CHARACTERISTICS
+
 # **Cloud Deployment Artifacts and Workload Optimization**
 
 We distinguish technologies that provide environments where applications can execute and serve the purpose of running code as deployment options. All options involve the allocation and management of computing resources (CPU, memory, storage) and require network connectivity to interact with other systems and the internet. Different deployment options offer varying levels of abstraction, resource allocation, and management complexity. Understanding their characteristics helps in choosing the right approach for specific use cases. We distinguish the following models, derived from *industry knowledge*, *operational patterns*, and *practitioner experience* in managing complex systems:
