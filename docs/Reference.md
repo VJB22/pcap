@@ -2,7 +2,9 @@
 
 ### Introduction
 
-- Alam, S., & Baig, A. (2024). Hybrid cloud migration: Navigating legacy complexity in low-transparency environments. *Journal of Cloud Migration Studies*, 12(1), 45–67.
+- Alam, A., & Baig, S. (2024). Cloud computing in financial technology: Applications and 	challenges. FinTech, 4(1). https://www.paradigmpress.org/ist/article/view/1403
+
+- summary: Alam and Baig (2024) examine the role of cloud computing in the financial technology (FinTech) sector, highlighting its applications and challenges. Key applications include enhanced scalability for payment systems, improved banking operations, advanced data analytics for investment management, and innovations in insurtech and regulatory compliance. Challenges discussed involve data security, regulatory compliance, vendor lock-in risks, and complexities in migrating legacy systems. While the focus is on finance, the insights apply broadly to other industries adopting cloud solutions.
 
 ---
 
