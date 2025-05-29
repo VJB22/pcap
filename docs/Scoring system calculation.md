@@ -16,18 +16,18 @@ Where:
 
 ### Feature Mapping (Based on Cloud Deployment Artifact Document)
 
-| **Feature**             | **Graph Signal**                   | **Why It Matters**                                               | **Weight \(w_i\)**                                        |
-|--------------------------|------------------------------------|------------------------------------------------------------------|------------------------------------------------------------|
-| **Degree**              | \( deg(n) \)                        | High degree → stable, connected workload → VM/Baremetal          | +1.5 VM/Baremetal; -1.5 Serverless                         |
-| **Community Size**      | |C(n)|                        | Large clusters → Orchestrated; Singleton → Serverless             | +2.0 Orchestrated; -2.0 Serverless                         |
-| **Flows per Node**      | \( \sum \text{flows}(n) \)          | High flows → Dedicated resources                                  | +1.5 Baremetal; +1.0 VM                                    |
-| **Session Volatility**  | \( sv(n) \)                         | High volatility → Ephemeral, stateless (Serverless)               | -2.0 Baremetal/VM; +2.0 Serverless                         |
-| **TTL Variability**     | \( ttl(n) \)                        | High TTL variance → Cloud, bursty, external systems               | -1.5 Baremetal/VM; +1.5 Serverless                         |
-| **Component Type Score**| Singleton=1, Chain=2, Cluster=3...  | Graph topology pattern → Artifact hint                            | +2.0 Orchestrated/Containers; 0 Baremetal                   |
-| **Data Volume**         | \( bytes(n) \)                      | High data → Baremetal/VM                                          | +1.5 Baremetal/VM                                          |
-| **External Flow Ratio** | \( external\_ratio(n) \)            | High → Cloud-based; Low → On-Prem                                 | +2.0 Cloud; -2.0 Baremetal/VM                              |
-| **Role Score**          | \( role\_score(n) \)                 | Latent embedding (NMF roles)                                      | \(w_{role}\) (tunable, e.g., +1.5)                          |
-| **Avg Flow Duration**   | \( avg\_flow\_duration(n) \)        | Long → Persistent (Baremetal/VM); Short → Ephemeral (Serverless)  | +2.0 Baremetal; +1.5 VM; -2.0 Serverless; -1.5 Containers  |
+| **Feature**             | **Graph Signal**                                | **Why It Matters**                                               | **Weight \(w_i\)**                                        |
+|--------------------------|--------------------------------------------------|------------------------------------------------------------------|------------------------------------------------------------|
+| **Degree**              | \( deg(n) \)                                     | High degree → stable, connected workload → VM/Baremetal          | +1.5 VM/Baremetal; -1.5 Serverless                         |
+| **Community Size**      | \( \lvert C(n) \rvert \)                         | Large clusters → Orchestrated; Singleton → Serverless             | +2.0 Orchestrated; -2.0 Serverless                         |
+| **Flows per Node**      | \( \sum \text{flows}(n) \)                       | High flows → Dedicated resources                                  | +1.5 Baremetal; +1.0 VM                                    |
+| **Session Volatility**  | \( sv(n) \)                                      | High volatility → Ephemeral, stateless (Serverless)               | -2.0 Baremetal/VM; +2.0 Serverless                         |
+| **TTL Variability**     | \( ttl(n) \)                                     | High TTL variance → Cloud, bursty, external systems               | -1.5 Baremetal/VM; +1.5 Serverless                         |
+| **Component Type Score**| Singleton=1, Chain=2, Cluster=3...               | Graph topology pattern → Artifact hint                            | +2.0 Orchestrated/Containers; 0 Baremetal                   |
+| **Data Volume**         | \( bytes(n) \)                                   | High data → Baremetal/VM                                          | +1.5 Baremetal/VM                                          |
+| **External Flow Ratio** | \( external\_ratio(n) \)                         | High → Cloud-based; Low → On-Prem                                 | +2.0 Cloud; -2.0 Baremetal/VM                              |
+| **Role Score**          | \( role\_score(n) \)                              | Latent embedding (NMF roles)                                      | \(w_{role}\) (tunable, e.g., +1.5)                          |
+| **Avg Flow Duration**   | \( avg\_flow\_duration(n) \)                      | Long → Persistent (Baremetal/VM); Short → Ephemeral (Serverless)  | +2.0 Baremetal; +1.5 VM; -2.0 Serverless; -1.5 Containers  |
 ---
 
 ### Final Scoring Formula
