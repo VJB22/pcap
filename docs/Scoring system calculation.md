@@ -76,6 +76,12 @@ Where:
 
 
 ## References
+
+MOST IMPORTANT PAPERS FOR THESIS:
+https://arxiv.org/abs/1211.3951 
+https://www.catalyzex.com/paper/movie-recommendation-system-using-composite
+
+------------
 Barabási, A.-L. (2016). Network Science. 
 (For network metrics: degree, community size, topology patterns)
 
