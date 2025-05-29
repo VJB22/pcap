@@ -2,7 +2,7 @@
 
 We create a general formula where each artifact type is assigned a score profile across graph-derived features (find score distribution across all nodes -> empirical it is defined by my dataset):
 
-# General formula:
+**General formula**:
 
 S(n) = ∑(i=1 to k) wᵢ ⋅ fᵢ(n)
 
