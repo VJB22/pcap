@@ -49,6 +49,7 @@ Where:
 - **external_ratio(n)** = Ratio of external flows to total flows
 - **role_score(n)** = Role membership from NMF (continuous or categorical)
 - **wrole** = Is the weight assigned to this role feature (chosen according to its importance)
+- **avg_flow_duration(n)** = Average flow duration per node
 
 Where:
 - \( d \) = Time weight for `avg_flow_duration(n)`:
