@@ -16,8 +16,6 @@ Where:
 
 ### Feature Mapping (Based on Cloud Deployment Artifact Document)
 
-### Feature Mapping (Based on Cloud Deployment Artifact Document)
-
 | **Feature**             | **Graph Signal**                    | **Why It Matters**                                               | **Weight (wᵢ)**                                        |
 |--------------------------|------------------------------------|------------------------------------------------------------------|------------------------------------------------------------|
 | **Degree**              | deg(n)                              | High degree → stable, connected workload → VM/Baremetal          | +1.5 VM/Baremetal; -1.5 Serverless                         |
