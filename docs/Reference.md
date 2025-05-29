@@ -23,7 +23,7 @@
 
 ---
 
-### Cloud Deployment Artifacts and Workload Inference
+### Cloud Deployment Artifacts and Workload Inference -> theory
 
 - Li, D., Zhuang, Y., & Li, J. (2018). A comparative study of containers and virtual machines in big data environment. *arXiv preprint*. https://arxiv.org/abs/1807.01842
 - Zhang, Y., & Zhang, Y. (2018). Container-based cluster orchestration systems: A taxonomy and future directions. *arXiv preprint*. https://arxiv.org/abs/1807.06193
