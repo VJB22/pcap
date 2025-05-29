@@ -103,3 +103,41 @@ We look at the different artifact types to distinguish workloads that we run on 
 | **Data-Intensive Workloads** | 🔸 High volume per MAC+IP 🔸 High byte count (requires frame\_len aggregation) 🔸 Repeated large flows between internal nodes | Add: data\_volume \= df.groupby('mac\_ip\_combo')\['frame\_len'\].sum() |
 | **Compliance-Sensitive Workloads** | 🔸 Internal flows only 🔸 MACs/IPs that never communicate with external endpoints 🔸 Long-lived services (low churn) | ✔ flow\_relation \= 'internal\_only' ✔ Long active durations |
 
+
+## 📚 Related Research Articles
+
+### 📘 1. DevOps Workflow Optimization: Enhancing Deployment and Efficiency for Cloud Applications  
+**Authors**: Devik Pareek & Prashanth K  
+**Published**: 2024  
+**Summary**:  
+This paper explores DevOps workflow optimization techniques, including automation, CI/CD processes, Infrastructure as Code (IaC), and monitoring. It provides guidance on increasing deployment velocity and operational efficiency for cloud-hosted applications.  
+**Access**: [ResearchGate](https://www.researchgate.net/publication/384460916_DevOps_workflow_optimization_Enhancing_deployment_and_efficiency_for_cloud_application)
+
+---
+
+### 📘 2. Towards Workload-aware Cloud Efficiency: A Large-scale Empirical Study of Cloud Workload Characteristics  
+**Authors**: Mateo Clement  
+**Published**: 2024  
+**Summary**:  
+This study analyzes various virtualization solutions, such as hypervisors and container-based approaches, providing insights into how virtualization influences performance and cost-effectiveness in cloud computing environments. It offers recommendations for optimizing cloud efficiency through appropriate virtualization technologies.  
+**Access**: [ResearchGate](https://www.researchgate.net/publication/391454975_Towards_Workload-aware_Cloud_Efficiency_A_Large-scale_Empirical_Study_of_Cloud_Workload_Characteristics)
+
+---
+
+### 📘 3. Containerization in Multi-Cloud Environment: Roles, Strategies, Challenges, and Solutions for Effective Implementation  
+**Authors**: Muhammad Waseem et al.  
+**Published**: 2024  
+**Summary**:  
+This research systematically investigates containerization in multi-cloud environments, identifying themes like scalability, performance optimization, security, and monitoring. It categorizes strategies and challenges, providing a comprehensive overview for effective containerization implementation.  
+**Access**: [arXiv](https://arxiv.org/abs/2403.12980)
+
+---
+
+### 📘 4. Recent Improvements in Cloud Resource Optimization with Dynamic Workloads  
+**Authors**: Not specified  
+**Published**: 2024  
+**Summary**:  
+This article examines advancements in optimizing cloud resources for dynamic workloads using machine learning. It reviews approaches and frameworks aimed at improving resource allocation, performance, and cost-effectiveness in cloud systems.  
+**Access**: [SSRN](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4803863)
+
+---
