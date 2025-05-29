@@ -2,6 +2,8 @@
 
 We create a general formula where each artifact type is assigned a score profile across graph-derived features (find score distribution across all nodes -> empirical it is defined by my dataset):
 
+# General formula:
+
 S(n) = ∑(i=1 to k) wᵢ ⋅ fᵢ(n)
 
 Where:
@@ -14,25 +16,26 @@ Where:
 
 ### Feature Mapping (Based on Cloud Deployment Artifact Document)
 
-| **Feature**            | **Signal (Graph)**                          | **Why It Matters**                                         | **Weight (wᵢ)**                                        |
-|------------------------|---------------------------------------------|-------------------------------------------------------------|-------------------------------------------------------|
-| Degree                 | deg(n)                                      | High degree → stable flows → VM/Baremetal                   | +1.5 VM/Baremetal; -1.5 Serverless                     |
-| Community Size         | \|C(n)\|                                     | Large clusters → Orchestrated; Singleton → Serverless       | +2.0 Orchestrated; -2.0 Serverless                     |
-| Flows per Node         | Σ flows(n)                                   | High flows → Dedicated resources                            | +1.5 Baremetal; +1.0 VM                                |
-| Session Volatility     | sv(n)                                        | High volatility → Serverless                                | -2.0 Baremetal/VM; +2.0 Serverless                     |
-| TTL Variability        | ttl(n)                                       | High TTL variance → Cloud/Bursty                            | -1.5 Baremetal/VM; +1.5 Serverless                     |
-| Component Type Score   | Singleton=0, Chain=1, Cluster=2, Hub=3      | Topology indicator for artifact type                        | +2.0 Orchestrated/Containers; 0 Baremetal              |
-| Data Volume            | bytes(n)                                     | High data → Baremetal/VM                                    | +1.5 Baremetal/VM                                      |
-| External Flow Ratio    | external_ratio(n)                            | High → Cloud; Low → On-Prem                                 | +2.0 Cloud (Serverless/Container); -2.0 Baremetal/VM    |
-| **Role Score**         | role_score(n)                                | Latent pattern from NMF role mining                         | **wᵣₒₗₑ** (tunable, theory-driven)                      |
-
+| **Feature**             | **Graph Signal**                   | **Why It Matters**                                               | **Weight \(w_i\)**                                        |
+|--------------------------|------------------------------------|------------------------------------------------------------------|------------------------------------------------------------|
+| **Degree**              | \( deg(n) \)                        | High degree → stable, connected workload → VM/Baremetal          | +1.5 VM/Baremetal; -1.5 Serverless                         |
+| **Community Size**      | \( |C(n)| \)                        | Large clusters → Orchestrated; Singleton → Serverless             | +2.0 Orchestrated; -2.0 Serverless                         |
+| **Flows per Node**      | \( \sum \text{flows}(n) \)          | High flows → Dedicated resources                                  | +1.5 Baremetal; +1.0 VM                                    |
+| **Session Volatility**  | \( sv(n) \)                         | High volatility → Ephemeral, stateless (Serverless)               | -2.0 Baremetal/VM; +2.0 Serverless                         |
+| **TTL Variability**     | \( ttl(n) \)                        | High TTL variance → Cloud, bursty, external systems               | -1.5 Baremetal/VM; +1.5 Serverless                         |
+| **Component Type Score**| Singleton=1, Chain=2, Cluster=3...  | Graph topology pattern → Artifact hint                            | +2.0 Orchestrated/Containers; 0 Baremetal                   |
+| **Data Volume**         | \( bytes(n) \)                      | High data → Baremetal/VM                                          | +1.5 Baremetal/VM                                          |
+| **External Flow Ratio** | \( external\_ratio(n) \)            | High → Cloud-based; Low → On-Prem                                 | +2.0 Cloud; -2.0 Baremetal/VM                              |
+| **Role Score**          | \( role\_score(n) \)                 | Latent embedding (NMF roles)                                      | \(w_{role}\) (tunable, e.g., +1.5)                          |
+| **Avg Flow Duration**   | \( avg\_flow\_duration(n) \)        | Long → Persistent (Baremetal/VM); Short → Ephemeral (Serverless)  | +2.0 Baremetal; +1.5 VM; -2.0 Serverless; -1.5 Containers  |
 ---
 
 ### Final Scoring Formula
 
 For each node *n*:
 
-S(n) = 1.5 * deg(n) + 2.0 * |C(n)| + 1.5 * flows(n) - 2.0 * sv(n) - 1.5 * ttl(n) + 2.0 * comp(n) + 1.5 * bytes(n) + 2.0 * external_ratio(n) + wrole * role_score(n)
+S(n) = 1.5 * deg(n) + 2.0 * |C(n)| + 1.5 * flows(n) - 2.0 * sv(n) - 1.5 * ttl(n) + 2.0 * comp(n) + 1.5 * bytes(n) + 2.0 * external_ratio(n) + wrole * role_score(n)+ d * avg_flow_duration(n)
+\]
 
 Where:
 
@@ -46,6 +49,16 @@ Where:
 - **external_ratio(n)** = Ratio of external flows to total flows
 - **role_score(n)** = Role membership from NMF (continuous or categorical)
 - **wrole** = Is the weight assigned to this role feature (chosen according to its importance)
+
+Where:
+- \( d \) = Time weight for `avg_flow_duration(n)`:
+  - **+2.0** for Baremetal
+  - **+1.5** for VM
+  - **0** for Orchestrated / Mini VM (neutral)
+  - **-1.5** for Containers
+  - **-2.0** for Serverless
+
+---
 
 ### Threshold Heuristics for Artifact Classification
 
