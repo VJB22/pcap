@@ -23,6 +23,11 @@ These models are not purely theoretical: their traits reflect years of operation
 - Density of communication patterns
 - Burstiness and volatility
 
+Theoretical Foundation for Deployment Artifact Inference
+Table 1 outlines the theoretical characteristics of common deployment artifacts, including serverless functions, containers, virtual machines, and baremetal servers. Each artifact type exhibits distinct properties across dimensions such as abstraction level, resource allocation, startup time, isolation, and state management (e.g., AWS, 2023; CNCF, 2023). These properties serve as a conceptual reference for inferring deployment artifacts from workload graphs.
+
+**TABLE 1**:
+
 | Aspect | Serverless Functions | Containers | Orchestrated Containers | Virtual Machines (VMs) | Mini-VMs (e.g., Firecracker) | Baremetal Server |
 | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
 | **Abstraction**  **Level** | Function-level (high) | Process-level | Multi-container application | OS-level | Lightweight VM | Hardware-level |
@@ -37,6 +42,8 @@ These models are not purely theoretical: their traits reflect years of operation
 
 **Mapping Deployment Artifact Traits to Graph-Derived Signals**
 
+To operationalize these characteristics, we design a linear scoring system that maps graph-derived features to artifact-specific signals:
+
 | Aspect | What to Look for in Graph | Why It Matters | Example Patterns |
 | :---- | :---- | :---- | :---- |
 | Abstraction Level | Graph topology: singleton, hub, dense cluster; node degree distribution | Serverless = singleton, bursty; Containers = dense clusters; VMs = mid-size communities | Serverless: singleton nodes with few edges; Containers: densely connected clusters; VMs: flatter, tiered graph structures |
@@ -49,7 +56,12 @@ These models are not purely theoretical: their traits reflect years of operation
 | Management Overhead | Presence of control-plane nodes (identified via roles); central hubs | Baremetal/VMs → admin/control plane traffic; Containers → orchestration control nodes (K8s) | VMs: admin nodes with stable connections; K8s: etcd/CoreDNS; Serverless: minimal control-plane structure |
 | Cost Model | Session duration; flow frequency; burstiness | Short-lived, bursty flows → usage-based (serverless); stable, long flows → reserved (VMs, baremetal) | Serverless: high churn, idle periods; VMs: sustained flows over time; Containers: moderate churn |
 
+# This mapping enables the system to infer artifact types by computing a composite score for each workload node in the graph:
 
+S(n) = ∑(i=1 to k) wᵢ ⋅ fᵢ(n)
+
+where fᵢ(n) are graph-derived features for node n and wᵢ are weights aligned with the theoretical characteristics.
+----
 **Bare Metal Servers** provide direct access to physical hardware and full control over server infrastructure. From an application perspective bare metal servers offer the highest performance, the lowest overhead and the highest level of security isolation, but require the most manual management. Bare metal servers are used for high-performance computing, applications with specific hardware requirements and workloads needing consistent, predictable performance.
 
 **Virtual Machines (VMs)** provide a complete virtualized operating system using a hypervisor for isolated environments with dedicated resources. Operators can run multiple different OS types on the same physical hardware with full OS-level control, moderate overhead and resource consumption. Virtual server are used to run multiple different application environments, for legacy application hosting and scenarios that require full OS customization
