@@ -7,66 +7,54 @@ For **cloud workloads (Louvain communities)**, I aggregate node-level artifacts 
 
 ### General Linear Scoring Formula (Node-Level)
 
-For each node \( n \):
+For each node *n*:
 
-\[
-S_{\text{artifact}}(n) = \sum_{i=1}^{k} w_i \cdot z_i(n)
-\]
+**S<sub>artifact</sub>(n)** = Σ *wᵢ* · *zᵢ(n)*
 
-Where:  
-- \( S_{\text{artifact}}(n) \) = Score for a specific artifact type.  
-- \( z_i(n) \) = Z-score normalized value of feature \( i \) for node \( n \).  
-- \( w_i \) = Empirical weight for feature \( i \).
+Where:
+- **S<sub>artifact</sub>(n)** = Score for a specific artifact type.
+- **zᵢ(n)** = Z-score normalized value of feature *i* for node *n*.
+- **wᵢ** = Empirical weight for feature *i*.
 
 ---
 
 ### Features (Z-score Normalized)
 
-\[
-\begin{aligned}
-S_{\text{artifact}}(n) = \;& 3.0 \cdot z_{\text{component type}}(n) \\
-&+ 2.0 \cdot z_{\text{total bytes}}(n) \\
-&+ 2.5 \cdot z_{\text{external ratio}}(n) \\
-&+ 2.0 \cdot z_{\text{degree}}(n) \\
-&+ 2.0 \cdot z_{\text{avg flow duration}}(n) \\
-&+ 2.5 \cdot z_{\text{role score}}(n) \\
-&+ 2.0 \cdot z_{\text{community size}}(n) \\
-&+ 2.0 \cdot z_{\text{flows}}(n) \\
-&- 2.0 \cdot z_{\text{session volatility}}(n) \\
-&- 1.5 \cdot z_{\text{ttl variability}}(n)
-\end{aligned}
-\]
+**S<sub>artifact</sub>(n)** =  
+&ensp;&ensp;3.0 · *z<sub>component type</sub>(n)*  
+&ensp;+ 2.0 · *z<sub>total bytes</sub>(n)*  
+&ensp;+ 2.5 · *z<sub>external ratio</sub>(n)*  
+&ensp;+ 2.0 · *z<sub>degree</sub>(n)*  
+&ensp;+ 2.0 · *z<sub>avg flow duration</sub>(n)*  
+&ensp;+ 2.5 · *z<sub>role score</sub>(n)*  
+&ensp;+ 2.0 · *z<sub>community size</sub>(n)*  
+&ensp;+ 2.0 · *z<sub>flows</sub>(n)*  
+&ensp;− 2.0 · *z<sub>session volatility</sub>(n)*  
+&ensp;− 1.5 · *z<sub>ttl variability</sub>(n)*
 
-With **artifact-specific adjustments** for `avg_flow_duration(n)`:
+With artifact-specific adjustments for **avg_flow_duration(n)**:
 
-\[
-\begin{cases}
-+2.0 & \text{Baremetal} \\
-+1.5 & \text{VM} \\
-0 & \text{Orchestrated / Mini VM} \\
--1.5 & \text{Container} \\
--2.0 & \text{Serverless}
-\end{cases}
-\]
+| Artifact Type            | Adjustment |
+| ------------------------ | ---------- |
+| Baremetal                | +2.0       |
+| VM                       | +1.5       |
+| Orchestrated / Mini VM   | 0          |
+| Container                | −1.5       |
+| Serverless               | −2.0       |
 
 ---
 
-###  Cloud Workload-Level Artifact Recommendation (Louvain Community)
+### 🌩Cloud Workload-Level Artifact Recommendation (Louvain Community)
 
-For each cloud workload \( W \) (Louvain community), I infer artifacts by:
--  Taking the **majority vote** of the node-level top artifacts within \( W \).
--  Computing **artifact diversity metrics**:
-  - **Entropy**:
+For each cloud workload *W* (Louvain community), I infer artifacts by:
+- Taking the **majority vote** of the node-level top artifacts within *W*.
+- Computing **artifact diversity metrics**:
+  - **Entropy**:  
+    *H(W)* = −Σ *p(a)* · log(*p(a)*)  
+    Where *p(a)* = proportion of nodes in *W* with artifact *a*.
+  - **Unique Artifact Count** = Number of distinct artifacts in *W*.
 
-\[
-H(W) = -\sum_{a} p(a) \log p(a)
-\]
-
-Where \( p(a) \) = proportion of nodes in \( W \) with artifact \( a \).
-
-  - **Unique Artifact Count** = number of distinct artifacts in \( W \).
-
-This provides a **single recommended artifact** for \( W \) (via majority vote) and a **diversity signal** to detect mixed workloads.
+This provides a **single recommended artifact** for *W* (via majority vote) and a **diversity signal** to detect mixed workloads.
 ---
 
 FOR LINEAR SCORING SYSTEM
