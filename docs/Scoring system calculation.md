@@ -1,6 +1,6 @@
 # Deployment Artifact Scoring Formula
 
-We use a **linear scoring model** to assign deployment artifact recommendations to nodes and cloud workloads. This model combines graph-derived features with theory-driven, empirically adjusted weights.
+I use a **linear scoring model** to assign deployment artifact recommendations to nodes and cloud workloads. This model combines graph-derived features with theory-driven, empirically adjusted weights.
 
 ---
 
