@@ -6,7 +6,7 @@ I use a **linear scoring model** to assign **deployment artifact recommendations
 
 - **Workload_id** represents the smallest observable, network-resolvable unit of execution (a proxy for cloud tasks such as processes, containers, or VMs).
 - **Graph methods** (Louvain, ReFeX, component type) provide **contextual features** that describe each workload's behavior and topology within the system.
-- The **linear scoring system** combines these features to infer the **most suitable deployment artifact** for each workload.
+- The **linear scoring system** combines these features to explore the **most suitable deployment artifact** for each workload.
 
 ---
 
