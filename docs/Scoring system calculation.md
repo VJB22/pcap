@@ -1,10 +1,10 @@
-# Deployment Artifact Scoring Formula
+## Deployment Artifact Scoring Formula
 
 I use a **linear scoring model** to assign deployment artifact recommendations to nodes and cloud workloads. This model combines graph-derived features with theory-driven, empirically adjusted weights.
 
 ---
 
-### General Formula (Unified)
+## General Formula (Unified)
 
 For both node-level and cloud workload-level:
 
@@ -12,14 +12,14 @@ $$
 S_{artifact}(x) = \sum_{i=1}^{k} w_i \cdot f_i(x)
 $$
 
-Where:
-- **S_{artifact}(x)** = Linear score for a specific artifact type, computed for node *n* or cloud workload *W*
-- **wᵢ** = Weight for feature *i* 
-- **fᵢ(x)** = Graph-derived feature *i* for node or workload
+Where:  
+- **S_{artifact}(x)** = Linear score for a specific artifact type, computed for node *n* or cloud workload *W*  
+- **wᵢ** = Weight for feature *i*  
+- **fᵢ(x)** = Graph-derived feature *i* for node or workload  
 
 ---
 
-### Node-Level Scoring (Per Workload Node)
+## Node-Level Scoring (Per Workload Node)
 
 For each node *n*, features are **Z-score normalized**:
 
@@ -30,7 +30,12 @@ $$
 The node-level artifact scoring formula is:
 
 $$
-S(n) = 3 \cdot z_{component\_type\_score}(n) + 2 \cdot z_{bytes}(n) + 2.5 \cdot z_{external\_ratio}(n) + 2 \cdot z_{degree}(n) + 2 \cdot z_{avg\_flow\_duration}(n) + 2.5 \cdot z_{role\_score}(n) + 2.0 \cdot z_{community\_size}(n) + 2.0 \cdot z_{flows}(n) - 2.0 \cdot z_{session\_volatility}(n) - 1.5 \cdot z_{ttl\_variability}(n)
+S_{artifact}(n) =
+\begin{aligned}
+&3 \cdot z_{component\_type\_score}(n) + 2 \cdot z_{bytes}(n) + 2.5 \cdot z_{external\_ratio}(n) + 2 \cdot z_{degree}(n) \\
+&+ 2 \cdot z_{avg\_flow\_duration}(n) + 2.5 \cdot z_{role\_score}(n) + 2.0 \cdot z_{community\_size}(n) + 2.0 \cdot z_{flows}(n) \\
+&- 2.0 \cdot z_{session\_volatility}(n) - 1.5 \cdot z_{ttl\_variability}(n)
+\end{aligned}
 $$
 
 With an artifact-specific adjustment for **avg_flow_duration(n)**:
@@ -48,25 +53,60 @@ $$
 
 ---
 
-### Cloud Workload-Level Scoring (Per Group of Nodes) 
+## Cloud Workload-Level Artifact Inference (Voting-Based Aggregation)
 
-### PROBLEM: THERE IS ONLY ONE ARTIFACT BUT ON NODE LEVEL DIFFERENT KINDS -> FIND ANOTHER WAY
+For each cloud workload *W* (Louvain community), **I use a weighted voting system** to infer artifacts. This preserves the diversity of node-level artifact predictions and ranks artifacts by consensus:
 
-For each cloud workload *W* (Louvain community), features are **raw aggregated metrics** (no normalization):
+1. **Each node votes for its ranked artifacts** (e.g., top-ranked gets the highest vote, second-ranked slightly lower, etc.).
+2. **Votes are aggregated across all nodes in *W*.**
+3. **Artifacts are ranked based on total votes.**
+
+This produces a **ranked artifact list per cloud workload**, such as:
 
 $$
-S(W) = 3.0 \cdot max\_degree(W) + 2.0 \cdot mean\_bytes(W) + 2.5 \cdot max\_external\_ratio(W) + 2.0 \cdot total\_flows(W) + 2.0 \cdot mean\_avg\_flow\_duration(W) + 2.5 \cdot mean\_role\_score(W) - 1.5 \cdot mean\_session\_volatility(W) - 1.0 \cdot mean\_ttl\_variability(W)
+\text{Cloud } W: [\text{Baremetal}, \text{VM}, \text{Container}, \dots]
 $$
 
-Where:
-- **max_degree(W)** = Maximum degree of nodes in *W*
-- **mean_bytes(W)** = Mean bytes across nodes in *W*
-- **max_external_ratio(W)** = Maximum external ratio across nodes in *W*
-- **total_flows(W)** = Total flows across all nodes in *W*
-- **mean_avg_flow_duration(W)** = Mean average flow duration across nodes in *W*
-- **mean_role_score(W)** = Mean role score across nodes in *W*
-- **mean_session_volatility(W)** = Mean session volatility across nodes in *W*
-- **mean_ttl_variability(W)** = Mean TTL variability across nodes in *W*
+### Example:
+
+For Cloud *W*:
+- Node 1 votes: *Baremetal > VM > Container*  
+- Node 2 votes: *VM > Container > Serverless*  
+- Node 3 votes: *Container > Baremetal > VM*
+
+Aggregated votes give a final ranking for *W*:  
+$$
+[\text{Baremetal}, \text{VM}, \text{Container}]
+$$
+
+This approach preserves **artifact heterogeneity** within cloud workloads, enabling multi-artifact recommendations.
+
+```python
+score_fn = lambda f: {
+    'baremetal': 3*f[4]+2*f[5]+2.5*f[6]+2*f[0]+2*f[8],
+    'VM': 2.5*f[9]+2*f[1]+2.5*f[7]-1.5*f[2]+1.5*f[8],
+    'orchestrated': 2*f[9]+1.5*f[0]+2*f[1]-1.5*f[2],
+    'container': 1.5*f[1]+1.5*f[0]-1.5*f[2]-1.0*f[3]-1.5*f[8],
+    'mini_vm': 1.5*f[0]+1.5*f[7]-2*f[2]-1.5*f[3],
+    'serverless': 1.5*f[6]-2.5*f[2]-2*f[3]-1.5*f[1]-2*f[8]
+}
+```
+
+
+Here’s the mapping of the feature array `f` by position:
+
+| Index  | Feature in `f`            | Meaning                                           |
+|:------|:--------------------------|:--------------------------------------------------|
+| `f[0]` | degree                    | Node degree                                      |
+| `f[1]` | flows                     | Total flows                                      |
+| `f[2]` | session_volatility        | Session volatility per node                      |
+| `f[3]` | ttl_variability           | TTL variability                                  |
+| `f[4]` | component_type_score      | Encodes component type (e.g., singleton = 1, chain = 2, etc.) |
+| `f[5]` | bytes                     | Total bytes over edges                           |
+| `f[6]` | external_ratio            | Ratio of flows to external nodes (routers)       |
+| `f[7]` | role_score                | NMF/Refex-based role score                       |
+| `f[8]` | avg_flow_duration         | Average flow duration per node                   |
+| `f[9]` | community_size            | Number of nodes in the community                 |
 
 
 
