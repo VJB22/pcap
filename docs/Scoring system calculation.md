@@ -14,7 +14,7 @@ $$
 
 Where:
 - **S_{artifact}(x)** = Linear score for a specific artifact type, computed for node *n* or cloud workload *W*
-- **wᵢ** = Weight for feature *i* (theory-driven, empirically adjusted)
+- **wᵢ** = Weight for feature *i* 
 - **fᵢ(x)** = Graph-derived feature *i* for node or workload
 
 ---
