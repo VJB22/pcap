@@ -55,26 +55,33 @@ $$
 
 ## Cloud Workload-Level Artifact Inference (Weighted Voting by Node Confidence)
 
-For each cloud workload *W* (Louvain community), **I use a weighted voting system** to infer artifacts. This approach **preserves artifact diversity** and **reflects node-level confidence** in the final rankings:
+For each cloud workload *W* (Louvain community), I use a **weighted voting system** to infer artifacts. This approach **preserves artifact diversity** and **reflects node-level confidence** in the final rankings:
 
-**Each node votes for its ranked artifacts**, assigning a higher weight to higher-ranked artifacts. The vote weight for an artifact at rank $r$ is:
-   $$
-   \text{Vote Weight for Artifact at Rank } r = \frac{\text{Confidence at Node}}{r + 1}
-   $$
-   where **Confidence at Node** is the difference between the top-1 and top-2 artifact scores at that node:
-   $$
-   \text{Confidence at Node} = \text{Top-1 Artifact Score} - \text{Top-2 Artifact Score}
-   $$
+1. **Each node votes for its ranked artifacts**, assigning a higher weight to higher-ranked artifacts. The vote weight for an artifact \(a\) at rank \(r\) for node \(n\) is:
 
-**Votes are aggregated across all nodes in $W$**:
-   $$
-   \text{Total Votes for Artifact in } W = \sum_{n \in W} \frac{\text{Confidence at Node } n}{\text{Rank of Artifact at Node } n + 1}
-   $$
+   \[
+   \text{Vote Weight for Artifact } a \text{ at Node } n = \frac{\text{Confidence}_n}{r + 1}
+   \]
 
-**Artifacts are ranked by total votes**, producing a ranked list of artifacts for the cloud workload $W$:
-$$
-[\text{Baremetal}, \text{VM}, \text{Container}]
-$$
+   where:
+
+   \[
+   \text{Confidence}_n = \text{Top-1 Artifact Score at Node } n - \text{Top-2 Artifact Score at Node } n
+   \]
+
+2. **Votes are aggregated across all nodes in \(W\)**:
+
+   \[
+   \text{Total Votes for Artifact } a \text{ in } W = \sum_{n \in W} \frac{\text{Confidence}_n}{\text{Rank of } a \text{ at Node } n + 1}
+   \]
+
+3. **Artifacts are ranked by total votes**, producing a ranked list of artifacts for the cloud workload \(W\):
+
+   \[
+   \text{Cloud } W: [\text{Baremetal}, \text{VM}, \text{Container}, \dots]
+   \]
+
+---
 
 ---
 
@@ -85,10 +92,11 @@ For Cloud *W*:
 - Node 2 votes: *VM > Container > Serverless* (confidence = 2.5)  
 - Node 3 votes: *Container > Baremetal > VM* (confidence = 1.8)
 
-Aggregated weighted votes yield a final cloud-level ranking for *W*:
-$$
+Aggregated weighted votes produce the final ranking for \(W\):
+
+\[
 [\text{Baremetal}, \text{VM}, \text{Container}]
-$$
+\]
 
 ---
 
