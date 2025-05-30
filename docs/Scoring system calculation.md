@@ -53,31 +53,44 @@ $$
 
 ---
 
-## Cloud Workload-Level Artifact Inference (Voting-Based Aggregation)
+## Cloud Workload-Level Artifact Inference (Weighted Voting by Node Confidence)
 
-For each cloud workload *W* (Louvain community), **I use a weighted voting system** to infer artifacts. This preserves the diversity of node-level artifact predictions and ranks artifacts by consensus:
+For each cloud workload *W* (Louvain community), **I use a weighted voting system based on node-level artifact confidence** to infer artifacts. This preserves the diversity of node-level predictions while weighting votes by confidence:
 
-1. **Each node votes for its ranked artifacts** (e.g., top-ranked gets the highest vote, second-ranked slightly lower, etc.).
-2. **Votes are aggregated across all nodes in *W*.**
-3. **Artifacts are ranked based on total votes.**
+1. **Each node votes for its ranked artifacts**, assigning higher weights to higher-ranked artifacts:
+   $$
+   \text{Vote weight for artifact at rank } r = \frac{\text{artifact confidence}}{r + 1}
+   $$
+   where **artifact confidence** is the difference between the top-1 and top-2 artifact scores at node level.
+
+2. **Votes are aggregated across all nodes in *W***:
+   $$
+   \text{Total votes per artifact} = \sum_{n \in W} \frac{\text{confidence}_n}{\text{rank} + 1}
+   $$
+
+3. **Artifacts are ranked based on total votes**.
 
 This produces a **ranked artifact list per cloud workload**, such as:
-
 $$
 \text{Cloud } W: [\text{Baremetal}, \text{VM}, \text{Container}, \dots]
 $$
 
+---
+
 ### Example:
 
 For Cloud *W*:
-- Node 1 votes: *Baremetal > VM > Container*  
-- Node 2 votes: *VM > Container > Serverless*  
-- Node 3 votes: *Container > Baremetal > VM*
+- Node 1 votes: *Baremetal > VM > Container*, with confidence = 3.0  
+- Node 2 votes: *VM > Container > Serverless*, with confidence = 2.5  
+- Node 3 votes: *Container > Baremetal > VM*, with confidence = 1.8
 
-Aggregated votes give a final ranking for *W*:  
+Aggregated weighted votes give a final ranking for *W*:
 $$
 [\text{Baremetal}, \text{VM}, \text{Container}]
 $$
+
+---
+
 
 This approach preserves **artifact heterogeneity** within cloud workloads, enabling multi-artifact recommendations.
 
