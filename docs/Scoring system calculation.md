@@ -57,46 +57,29 @@ $$
 
 For each cloud workload *W* (Louvain community), I use a **weighted voting system** to infer artifacts. This approach **preserves artifact diversity** and **reflects node-level confidence** in the final rankings:
 
-1. **Each node votes for its ranked artifacts**, assigning a higher weight to higher-ranked artifacts. The vote weight for an artifact \(a\) at rank \(r\) for node \(n\) is:
+1. **Each node votes for its ranked artifacts**, assigning a higher weight to higher-ranked artifacts.  
+   The vote weight for an artifact at rank `r` for node `n` is:  
+   - Vote Weight = (Confidence at Node) / (r + 1)  
+   - Where:  
+     - Confidence at Node = Top-1 Artifact Score - Top-2 Artifact Score
 
-   \[
-   \text{Vote Weight for Artifact } a \text{ at Node } n = \frac{\text{Confidence}_n}{r + 1}
-   \]
+2. **Votes are aggregated across all nodes in *W***:  
+   - Total Votes for Artifact = sum of (Confidence at Node / (Rank of Artifact at Node + 1)) over all nodes in *W*
 
-   where:
+3. **Artifacts are ranked by total votes**, producing a ranked list of artifacts for the cloud workload *W*:  
+   - Example:  
+     - Cloud *W*: [Baremetal, VM, Container, ...]
 
-   \[
-   \text{Confidence}_n = \text{Top-1 Artifact Score at Node } n - \text{Top-2 Artifact Score at Node } n
-   \]
-
-2. **Votes are aggregated across all nodes in \(W\)**:
-
-   \[
-   \text{Total Votes for Artifact } a \text{ in } W = \sum_{n \in W} \frac{\text{Confidence}_n}{\text{Rank of } a \text{ at Node } n + 1}
-   \]
-
-3. **Artifacts are ranked by total votes**, producing a ranked list of artifacts for the cloud workload \(W\):
-
-   \[
-   \text{Cloud } W: [\text{Baremetal}, \text{VM}, \text{Container}, \dots]
-   \]
-
----
-
----
-
-### Example
+### Example:
 
 For Cloud *W*:
-- Node 1 votes: *Baremetal > VM > Container* (confidence = 3.0)  
-- Node 2 votes: *VM > Container > Serverless* (confidence = 2.5)  
-- Node 3 votes: *Container > Baremetal > VM* (confidence = 1.8)
 
-Aggregated weighted votes produce the final ranking for \(W\):
+- Node 1 votes: Baremetal > VM > Container (confidence = 3.0)  
+- Node 2 votes: VM > Container > Serverless (confidence = 2.5)  
+- Node 3 votes: Container > Baremetal > VM (confidence = 1.8)
 
-\[
-[\text{Baremetal}, \text{VM}, \text{Container}]
-\]
+Aggregated weighted votes produce the final ranking for *W*:  
+- [Baremetal, VM, Container]
 
 ---
 
