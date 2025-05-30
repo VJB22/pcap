@@ -68,9 +68,9 @@ For each cloud workload *W* (Louvain community), I infer artifacts by:
 - Computing **artifact diversity metrics**:
   - **Entropy**:  
 
-  $$
-  H(W) = - \sum_{a} p(a) \cdot \log p(a)
-  $$
+$$
+H(W) = - \sum_{a} p(a) \cdot \log p(a)
+$$
 
   Where p(a) = proportion of nodes in *W* with artifact *a*.
   - **Unique Artifact Count** = Number of distinct artifacts in *W*.
