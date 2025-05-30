@@ -9,7 +9,9 @@ For **cloud workloads (Louvain communities)**, I aggregate node-level artifacts 
 
 The deployment artifact score is computed as a **linear combination** of graph-derived features:
 
-**S<sub>artifact</sub>(x)** = Σ *wᵢ* · *fᵢ(x)*
+$$
+S_{\text{artifact}}(x) = \sum_{i=1}^{k} w_i \cdot f_i(x)
+$$
 
 Where:
 - **S<sub>artifact</sub>(x)** = Linear score for a specific artifact type, computed for node *n* or cloud workload *W*.
@@ -22,7 +24,9 @@ Where:
 
 For each node *n*:
 
-**S<sub>artifact</sub>(n)** = Σ *wᵢ* · *zᵢ(n)*
+$$
+S_{\text{artifact}}(n) = \sum_{i=1}^{k} w_i \cdot z_i(n)
+$$
 
 Where:
 - **S<sub>artifact</sub>(n)** = Score for a specific artifact type.
@@ -60,12 +64,18 @@ With artifact-specific adjustments for **avg_flow_duration(n)**:
 ### Cloud Workload-Level Artifact Recommendation (Louvain Community)
 
 For each cloud workload *W* (Louvain community), I infer artifacts by:
-- Taking the **majority vote** of the node-level top artifacts within *W*.
+- Taking the **majority vote** of the node-level top artifacts within \(W\).
 - Computing **artifact diversity metrics**:
   - **Entropy**:  
-    *H(W)* = −Σ *p(a)* · log(*p(a)*)  
-    Where *p(a)* = proportion of nodes in *W* with artifact *a*.
-  - **Unique Artifact Count** = Number of distinct artifacts in *W*.
+
+  $$
+  H(W) = - \sum_{a} p(a) \cdot \log p(a)
+  $$
+
+  Where \(p(a)\) = proportion of nodes in \(W\) with artifact \(a\).
+
+  - **Unique Artifact Count** = Number of distinct artifacts in \(W\).
+
 
 This provides a **single recommended artifact** for *W* (via majority vote) and a **diversity signal** to detect mixed workloads.
 ---
