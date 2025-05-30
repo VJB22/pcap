@@ -57,18 +57,24 @@ $$
 
 For each cloud workload *W* (Louvain community), **I use a weighted voting system** to infer artifacts. This approach **preserves artifact diversity** and **reflects node-level confidence** in the final rankings:
 
-1. **Each node votes for its ranked artifacts**, assigning higher weights to higher-ranked artifacts based on the node’s artifact confidence. The vote weight for an artifact at rank *r* is:
+1. **Each node votes for its ranked artifacts**, assigning a higher weight to higher-ranked artifacts. The vote weight for an artifact at rank *r* is:
    $$
-   \text{Vote weight} = \frac{\text{Artifact Confidence at Node}}{r + 1}
+   \text{Vote Weight for Artifact at Rank } r = \frac{\text{Confidence at Node}}{r + 1}
    $$
-   where **artifact confidence** is the difference between the top-1 and top-2 artifact scores at that node.
+   where **Confidence at Node** is the difference between the top-1 and top-2 artifact scores at that node:
+   $$
+   \text{Confidence at Node} = \text{Top-1 Artifact Score} - \text{Top-2 Artifact Score}
+   $$
 
 2. **Votes are aggregated across all nodes in *W***:
    $$
-   \text{Total votes for an artifact in } W = \sum_{n \in W} \frac{\text{Artifact Confidence at Node } n}{\text{Artifact Rank at Node } n + 1}
+   \text{Total Votes for Artifact in } W = \sum_{n \in W} \frac{\text{Confidence at Node } n}{\text{Rank of Artifact at Node } n + 1}
    $$
 
-3. **Artifacts are ranked based on total votes** to produce a cloud-level artifact recommendation.
+3. **Artifacts are ranked by total votes**, producing a ranked list of artifacts for the cloud workload *W*:
+   $$
+   \text{Cloud } W: [\text{Baremetal}, \text{VM}, \text{Container}, \dots]
+   $$
 
 ---
 
