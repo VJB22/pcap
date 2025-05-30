@@ -1,7 +1,6 @@
 ## Deployment Artifact Scoring Model
 
 I use a **linear scoring model** to assign **deployment artifact recommendations per workload**, where each **workload_id (MAC + IP + Port)** is treated as a **proxy for a cloud workload unit**.
-Each workload_id (MAC+IP+Port) is treated as a proxy for a cloud workload unit. I explore deployment artifact suitability per workload using a linear scoring model built on graph-derived features (flows, component type, role score, community size, etc.). Louvain communities and graph topology provide contextual features but do not redefine the workload unit itself.
 
 ### Theoretical Justification
 
@@ -13,16 +12,16 @@ Each workload_id (MAC+IP+Port) is treated as a proxy for a cloud workload unit. 
 
 ## Linear Scoring Formula (Per Workload Node)
 
-For each node *n* (workload):
+For each node \(n\) (workload):
 
-\[
+$$
 S_{\text{artifact}}(n) = \sum_{i=1}^{k} w_i \cdot z_i(n)
-\]
+$$
 
 Where:
-- \( S_{\text{artifact}}(n) \) = Score for a specific deployment artifact.
-- \( w_i \) = Empirical weight for feature *i*.
-- \( z_i(n) \) = Z-score normalized value of feature *i* for node *n*.
+- \(S_{\text{artifact}}(n)\) = Score for a specific deployment artifact.
+- \(w_i\) = Empirical weight for feature \(i\).
+- \(z_i(n)\) = Z-score normalized value of feature \(i\) for node \(n\).
 
 ---
 
@@ -45,21 +44,22 @@ Where:
 
 ## Linear Scoring Model (Z-Score Normalized)
 
-\[
-S_{\text{artifact}}(n) =
-3.0 \cdot z_{\text{component type}}(n) +
-2.0 \cdot z_{\text{total bytes}}(n) +
-2.5 \cdot z_{\text{external ratio}}(n) +
-2.0 \cdot z_{\text{degree}}(n) +
-2.0 \cdot z_{\text{avg flow duration}}(n) +
-2.5 \cdot z_{\text{role score}}(n) +
-2.0 \cdot z_{\text{community size}}(n) +
-2.0 \cdot z_{\text{flows}}(n) -
-2.0 \cdot z_{\text{session volatility}}(n) -
-1.5 \cdot z_{\text{ttl variability}}(n)
-\]
+$$
+\begin{aligned}
+S_{\text{artifact}}(n) = & \; 3.0 \cdot z_{\text{component type}}(n) + \\
+& \; 2.0 \cdot z_{\text{total bytes}}(n) + \\
+& \; 2.5 \cdot z_{\text{external ratio}}(n) + \\
+& \; 2.0 \cdot z_{\text{degree}}(n) + \\
+& \; 2.0 \cdot z_{\text{avg flow duration}}(n) + \\
+& \; 2.5 \cdot z_{\text{role score}}(n) + \\
+& \; 2.0 \cdot z_{\text{community size}}(n) + \\
+& \; 2.0 \cdot z_{\text{flows}}(n) \\
+& - 2.0 \cdot z_{\text{session volatility}}(n) \\
+& - 1.5 \cdot z_{\text{ttl variability}}(n)
+\end{aligned}
+$$
 
-With artifact-specific adjustments for **avg_flow_duration(n)**:
+With artifact-specific adjustments for avg_flow_duration(n):
 
 | Artifact Type            | Adjustment |
 |--------------------------|------------|
@@ -79,8 +79,7 @@ With artifact-specific adjustments for **avg_flow_duration(n)**:
 
 ---
 
-This approach reflects the **most granular unit of workload analysis possible in network data**. It enables **data-driven deployment artifact recommendations** aligned with **cloud workload definition**.
-
+This approach reflects the **most granular unit of workload analysis possible in network data**. It enables **data-driven deployment artifact recommendations** aligned with **cloud workload theory**.
 ---
 
 FOR LINEAR SCORING SYSTEM
