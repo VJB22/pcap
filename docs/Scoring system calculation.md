@@ -44,7 +44,7 @@ With artifact-specific adjustments for **avg_flow_duration(n)**:
 
 ---
 
-### 🌩Cloud Workload-Level Artifact Recommendation (Louvain Community)
+### Cloud Workload-Level Artifact Recommendation (Louvain Community)
 
 For each cloud workload *W* (Louvain community), I infer artifacts by:
 - Taking the **majority vote** of the node-level top artifacts within *W*.
