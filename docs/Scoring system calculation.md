@@ -81,10 +81,10 @@ For Cloud *W*:
 Aggregated weighted votes produce the final ranking for *W*:  
 - [Baremetal, VM, Container]
 
+This approach preserves **artifact heterogeneity** within cloud workloads, enabling multi-artifact recommendations.
 ---
 
-
-This approach preserves **artifact heterogeneity** within cloud workloads, enabling multi-artifact recommendations.
+FOR LINEAR SCORING SYSTEM
 
 ```python
 score_fn = lambda f: {
