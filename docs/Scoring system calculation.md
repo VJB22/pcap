@@ -1,47 +1,45 @@
-## Deployment Artifact Scoring Formula
+## Deployment Artifact Scoring Formula (Updated Version)
 
-I use a **linear scoring model** to assign deployment artifact recommendations at the node level, based on graph-derived features and empirically adjusted weights. For cloud workloads (Louvain communities), I apply a **Weighted Voting by Node Confidence mechanism** that aggregates the artifact rankings of individual nodes within each community.
+I use a **linear scoring model** to assign **deployment artifact recommendations at the node level**, based on **graph-derived features** and empirically adjusted weights.  
+For **cloud workloads (Louvain communities)**, I aggregate node-level artifacts using **majority voting** and measure diversity via **entropy** and **artifact count**.
 
 ---
 
-## General Formula
+### General Linear Scoring Formula (Node-Level)
 
-For both node-level and cloud workload-level:
+For each node \( n \):
 
-$$
-S_{artifact}(x) = \sum_{i=1}^{k} w_i \cdot f_i(x)
-$$
+\[
+S_{\text{artifact}}(n) = \sum_{i=1}^{k} w_i \cdot z_i(n)
+\]
 
 Where:  
-- **S_{artifact}(x)** = Linear score for a specific artifact type, computed for node *n* or cloud workload *W*  
-- **wᵢ** = Weight for feature *i*  
-- **fᵢ(x)** = Graph-derived feature *i* for node or workload  
+- \( S_{\text{artifact}}(n) \) = Score for a specific artifact type.  
+- \( z_i(n) \) = Z-score normalized value of feature \( i \) for node \( n \).  
+- \( w_i \) = Empirical weight for feature \( i \).
 
 ---
 
-## Node-Level Scoring (Per Workload Node)
+### Features (Z-score Normalized)
 
-For each node *n*, features are **Z-score normalized**:
-
-$$
-z_i(n) = \frac{f_i(n) - \mu_i}{\sigma_i}
-$$
-
-The node-level artifact scoring formula is:
-
-$$
-S_{artifact}(n) =
+\[
 \begin{aligned}
-&3 \cdot z_{component\_type\_score}(n) + 2 \cdot z_{bytes}(n) + 2.5 \cdot z_{external\_ratio}(n) + 2 \cdot z_{degree}(n) \\
-&+ 2 \cdot z_{avg\_flow\_duration}(n) + 2.5 \cdot z_{role\_score}(n) + 2.0 \cdot z_{community\_size}(n) + 2.0 \cdot z_{flows}(n) \\
-&- 2.0 \cdot z_{session\_volatility}(n) - 1.5 \cdot z_{ttl\_variability}(n)
+S_{\text{artifact}}(n) = \;& 3.0 \cdot z_{\text{component type}}(n) \\
+&+ 2.0 \cdot z_{\text{total bytes}}(n) \\
+&+ 2.5 \cdot z_{\text{external ratio}}(n) \\
+&+ 2.0 \cdot z_{\text{degree}}(n) \\
+&+ 2.0 \cdot z_{\text{avg flow duration}}(n) \\
+&+ 2.5 \cdot z_{\text{role score}}(n) \\
+&+ 2.0 \cdot z_{\text{community size}}(n) \\
+&+ 2.0 \cdot z_{\text{flows}}(n) \\
+&- 2.0 \cdot z_{\text{session volatility}}(n) \\
+&- 1.5 \cdot z_{\text{ttl variability}}(n)
 \end{aligned}
-$$
+\]
 
-With an artifact-specific adjustment for **avg_flow_duration(n)**:
+With **artifact-specific adjustments** for `avg_flow_duration(n)`:
 
-$$
-d =
+\[
 \begin{cases}
 +2.0 & \text{Baremetal} \\
 +1.5 & \text{VM} \\
@@ -49,39 +47,26 @@ d =
 -1.5 & \text{Container} \\
 -2.0 & \text{Serverless}
 \end{cases}
-$$
+\]
 
 ---
 
-## Cloud Workload-Level Artifact Exploration (Weighted Voting by Node Confidence)
+###  Cloud Workload-Level Artifact Recommendation (Louvain Community)
 
-For each cloud workload *W* (Louvain community), I use a **weighted voting system** to infer artifacts. This approach **preserves artifact diversity** and **reflects node-level confidence** in the final rankings:
+For each cloud workload \( W \) (Louvain community), I infer artifacts by:
+-  Taking the **majority vote** of the node-level top artifacts within \( W \).
+-  Computing **artifact diversity metrics**:
+  - **Entropy**:
 
-1. **Each node votes for its ranked artifacts**, assigning a higher weight to higher-ranked artifacts.  
-   The vote weight for an artifact at rank `r` for node `n` is:  
-   - Vote Weight = (Confidence at Node) / (r + 1)  
-   - Where:  
-     - Confidence at Node = Top-1 Artifact Score - Top-2 Artifact Score
+\[
+H(W) = -\sum_{a} p(a) \log p(a)
+\]
 
-2. **Votes are aggregated across all nodes in *W***:  
-   - Total Votes for Artifact = sum of (Confidence at Node / (Rank of Artifact at Node + 1)) over all nodes in *W*
+Where \( p(a) \) = proportion of nodes in \( W \) with artifact \( a \).
 
-3. **Artifacts are ranked by total votes**, producing a ranked list of artifacts for the cloud workload *W*:  
-   - Example:  
-     - Cloud *W*: [Baremetal, VM, Container, ...]
+  - **Unique Artifact Count** = number of distinct artifacts in \( W \).
 
-### Example:
-
-For Cloud *W*:
-
-- Node 1 votes: Baremetal > VM > Container (confidence = 3.0)  
-- Node 2 votes: VM > Container > Serverless (confidence = 2.5)  
-- Node 3 votes: Container > Baremetal > VM (confidence = 1.8)
-
-Aggregated weighted votes produce the final ranking for *W*:  
-- [Baremetal, VM, Container]
-
-This approach preserves **artifact heterogeneity** within cloud workloads, enabling multi-artifact recommendations.
+This provides a **single recommended artifact** for \( W \) (via majority vote) and a **diversity signal** to detect mixed workloads.
 ---
 
 FOR LINEAR SCORING SYSTEM
