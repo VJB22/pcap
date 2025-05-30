@@ -48,7 +48,9 @@ $$
 
 ---
 
-### Cloud Workload-Level Scoring (Per Group of Nodes)
+### Cloud Workload-Level Scoring (Per Group of Nodes) 
+
+### PROBLEM: THERE IS ONLY ONE ARTIFACT BUT ON NODE LEVEL DIFFERENT KINDS -> FIND ANOTHER WAY
 
 For each cloud workload *W* (Louvain community), features are **raw aggregated metrics** (no normalization):
 
