@@ -55,36 +55,31 @@ $$
 
 ## Cloud Workload-Level Artifact Inference (Weighted Voting by Node Confidence)
 
-For each cloud workload *W* (Louvain community), **I use a weighted voting system based on node-level artifact confidence** to infer artifacts. This preserves the diversity of node-level predictions while weighting votes by confidence:
+For each cloud workload *W* (Louvain community), **I use a weighted voting system** to infer artifacts. This approach **preserves artifact diversity** and **reflects node-level confidence** in the final rankings:
 
-1. **Each node votes for its ranked artifacts**, assigning higher weights to higher-ranked artifacts:
+1. **Each node votes for its ranked artifacts**, assigning higher weights to higher-ranked artifacts based on the node’s artifact confidence. The vote weight for an artifact at rank *r* is:
    $$
-   \text{Vote weight for artifact at rank } r = \frac{\text{artifact confidence}}{r + 1}
+   \text{Vote weight} = \frac{\text{Artifact Confidence at Node}}{r + 1}
    $$
-   where **artifact confidence** is the difference between the top-1 and top-2 artifact scores at node level.
+   where **artifact confidence** is the difference between the top-1 and top-2 artifact scores at that node.
 
 2. **Votes are aggregated across all nodes in *W***:
    $$
-   \text{Total votes per artifact} = \sum_{n \in W} \frac{\text{confidence}_n}{\text{rank} + 1}
+   \text{Total votes for an artifact in } W = \sum_{n \in W} \frac{\text{Artifact Confidence at Node } n}{\text{Artifact Rank at Node } n + 1}
    $$
 
-3. **Artifacts are ranked based on total votes**.
-
-This produces a **ranked artifact list per cloud workload**, such as:
-$$
-\text{Cloud } W: [\text{Baremetal}, \text{VM}, \text{Container}, \dots]
-$$
+3. **Artifacts are ranked based on total votes** to produce a cloud-level artifact recommendation.
 
 ---
 
-### Example:
+### Example
 
 For Cloud *W*:
-- Node 1 votes: *Baremetal > VM > Container*, with confidence = 3.0  
-- Node 2 votes: *VM > Container > Serverless*, with confidence = 2.5  
-- Node 3 votes: *Container > Baremetal > VM*, with confidence = 1.8
+- Node 1 votes: *Baremetal > VM > Container* (confidence = 3.0)  
+- Node 2 votes: *VM > Container > Serverless* (confidence = 2.5)  
+- Node 3 votes: *Container > Baremetal > VM* (confidence = 1.8)
 
-Aggregated weighted votes give a final ranking for *W*:
+Aggregated weighted votes yield a final cloud-level ranking for *W*:
 $$
 [\text{Baremetal}, \text{VM}, \text{Container}]
 $$
