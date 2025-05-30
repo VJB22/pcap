@@ -1,11 +1,24 @@
-## Deployment Artifact Scoring Formula (Updated Version)
+## Deployment Artifact Scoring Formula
 
 I use a **linear scoring model** to assign **deployment artifact recommendations at the node level**, based on **graph-derived features** and empirically adjusted weights.  
 For **cloud workloads (Louvain communities)**, I aggregate node-level artifacts using **majority voting** and measure diversity via **entropy** and **artifact count**.
 
 ---
 
-### General Linear Scoring Formula (Node-Level)
+# General Linear Scoring Formula (Base Model)
+
+The deployment artifact score is computed as a **linear combination** of graph-derived features:
+
+**S<sub>artifact</sub>(x)** = Σ *wᵢ* · *fᵢ(x)*
+
+Where:
+- **S<sub>artifact</sub>(x)** = Linear score for a specific artifact type, computed for node *n* or cloud workload *W*.
+- **wᵢ** = Empirical weight for feature *i*.
+- **fᵢ(x)** = Graph-derived feature *i* for node or workload *x*.
+
+----
+
+### Node-Level Linear Scoring Formula
 
 For each node *n*:
 
