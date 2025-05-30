@@ -1,10 +1,10 @@
 ## Deployment Artifact Scoring Formula
 
-I use a **linear scoring model** to assign deployment artifact recommendations at the node level, based on graph-derived features and empirically adjusted weights. For cloud workloads (Louvain communities), I apply a **voting mechanism** that aggregates the artifact rankings of individual nodes within each community.
+I use a **linear scoring model** to assign deployment artifact recommendations at the node level, based on graph-derived features and empirically adjusted weights. For cloud workloads (Louvain communities), I apply a **Weighted Voting by Node Confidence mechanism** that aggregates the artifact rankings of individual nodes within each community.
 
 ---
 
-## General Formula (Unified)
+## General Formula
 
 For both node-level and cloud workload-level:
 
@@ -53,7 +53,7 @@ $$
 
 ---
 
-## Cloud Workload-Level Artifact Inference (Weighted Voting by Node Confidence)
+## Cloud Workload-Level Artifact Exploration (Weighted Voting by Node Confidence)
 
 For each cloud workload *W* (Louvain community), I use a **weighted voting system** to infer artifacts. This approach **preserves artifact diversity** and **reflects node-level confidence** in the final rankings:
 
