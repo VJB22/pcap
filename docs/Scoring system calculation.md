@@ -1,6 +1,6 @@
 ## Deployment Artifact Scoring Formula
 
-I use a **linear scoring model** to assign deployment artifact recommendations to nodes and cloud workloads. This model combines graph-derived features with theory-driven, empirically adjusted weights.
+I use a **linear scoring model** to assign deployment artifact recommendations at the node level, based on graph-derived features and empirically adjusted weights. For cloud workloads (Louvain communities), I apply a **voting mechanism** that aggregates the artifact rankings of individual nodes within each community.
 
 ---
 
