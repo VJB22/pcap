@@ -64,7 +64,7 @@ With artifact-specific adjustments for **avg_flow_duration(n)**:
 ### Cloud Workload-Level Artifact Recommendation (Louvain Community)
 
 For each cloud workload *W* (Louvain community), I infer artifacts by:
-- Taking the **majority vote** of the node-level top artifacts within \(W\).
+- Taking the **majority vote** of the node-level top artifacts within *W*.
 - Computing **artifact diversity metrics**:
   - **Entropy**:  
 
@@ -72,12 +72,11 @@ For each cloud workload *W* (Louvain community), I infer artifacts by:
   H(W) = - \sum_{a} p(a) \cdot \log p(a)
   $$
 
-  Where \(p(a)\) = proportion of nodes in \(W\) with artifact \(a\).
+  Where p(a) = proportion of nodes in *W* with artifact *a*.
+  - **Unique Artifact Count** = Number of distinct artifacts in *W*.
 
-  - **Unique Artifact Count** = Number of distinct artifacts in \(W\).
 
-
-This provides a **single recommended artifact** for *W* (via majority vote) and a **diversity signal** to detect mixed workloads.
+- This provides a **single recommended artifact** for *W* (via majority vote) and a **diversity signal** to detect mixed workloads.
 ---
 
 FOR LINEAR SCORING SYSTEM
