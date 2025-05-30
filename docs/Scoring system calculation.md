@@ -1,58 +1,68 @@
-## Deployment Artifact Scoring Formula
+## Deployment Artifact Scoring Model
 
-I use a **linear scoring model** to assign **deployment artifact recommendations at the node level**, based on **graph-derived features** and empirically adjusted weights.  
-For **cloud workloads (Louvain communities)**, I aggregate node-level artifacts using **majority voting** and measure diversity via **entropy** and **artifact count**.
+I use a **linear scoring model** to assign **deployment artifact recommendations per workload**, where each **workload_id (MAC + IP + Port)** is treated as a **proxy for a cloud workload unit**.
+Each workload_id (MAC+IP+Port) is treated as a proxy for a cloud workload unit. I explore deployment artifact suitability per workload using a linear scoring model built on graph-derived features (flows, component type, role score, community size, etc.). Louvain communities and graph topology provide contextual features but do not redefine the workload unit itself.
+
+### Theoretical Justification
+
+- **Workload_id** represents the smallest observable, network-resolvable unit of execution (a proxy for cloud tasks such as processes, containers, or VMs).
+- **Graph methods** (Louvain, ReFeX, component type) provide **contextual features** that describe each workload's behavior and topology within the system.
+- The **linear scoring system** combines these features to infer the **most suitable deployment artifact** for each workload.
 
 ---
 
-# General Linear Scoring Formula (Base Model)
+## Linear Scoring Formula (Per Workload Node)
 
-The deployment artifact score is computed as a **linear combination** of graph-derived features:
+For each node *n* (workload):
 
-$$
-S_{\text{artifact}}(x) = \sum_{i=1}^{k} w_i \cdot f_i(x)
-$$
-
-Where:
-- **S<sub>artifact</sub>(x)** = Linear score for a specific artifact type, computed for node *n* or cloud workload *W*.
-- **wᵢ** = Empirical weight for feature *i*.
-- **fᵢ(x)** = Graph-derived feature *i* for node or workload *x*.
-
-----
-
-### Node-Level Linear Scoring Formula
-
-For each node *n*:
-
-$$
+\[
 S_{\text{artifact}}(n) = \sum_{i=1}^{k} w_i \cdot z_i(n)
-$$
+\]
 
 Where:
-- **S<sub>artifact</sub>(n)** = Score for a specific artifact type.
-- **zᵢ(n)** = Z-score normalized value of feature *i* for node *n*.
-- **wᵢ** = Empirical weight for feature *i*.
+- \( S_{\text{artifact}}(n) \) = Score for a specific deployment artifact.
+- \( w_i \) = Empirical weight for feature *i*.
+- \( z_i(n) \) = Z-score normalized value of feature *i* for node *n*.
 
 ---
 
-### Features (Z-score Normalized)
+## Features Used in the Scoring Model
 
-**S<sub>artifact</sub>(n)** =  
-&ensp;&ensp;3.0 · *z<sub>component type</sub>(n)*  
-&ensp;+ 2.0 · *z<sub>total bytes</sub>(n)*  
-&ensp;+ 2.5 · *z<sub>external ratio</sub>(n)*  
-&ensp;+ 2.0 · *z<sub>degree</sub>(n)*  
-&ensp;+ 2.0 · *z<sub>avg flow duration</sub>(n)*  
-&ensp;+ 2.5 · *z<sub>role score</sub>(n)*  
-&ensp;+ 2.0 · *z<sub>community size</sub>(n)*  
-&ensp;+ 2.0 · *z<sub>flows</sub>(n)*  
-&ensp;− 2.0 · *z<sub>session volatility</sub>(n)*  
-&ensp;− 1.5 · *z<sub>ttl variability</sub>(n)*
+| Feature                    | Description                                  |
+|---------------------------|----------------------------------------------|
+| Degree                    | Number of connections.                       |
+| Flows                     | Total flow count.                            |
+| Bytes                     | Total bytes (sum of sent/received).          |
+| Session Volatility        | Variability of session behavior.             |
+| TTL Variability           | Variability in packet TTLs.                  |
+| Component Type (mapped)   | Structural position (e.g., Singleton, Chain). |
+| External Ratio            | Proportion of flows to external nodes.       |
+| Role Score (NMF/ReFeX)    | Latent graph-based feature.                   |
+| Avg Flow Duration         | Mean duration of flows.                      |
+| Community Size            | Size of Louvain community.                   |
+
+---
+
+## Linear Scoring Model (Z-Score Normalized)
+
+\[
+S_{\text{artifact}}(n) =
+3.0 \cdot z_{\text{component type}}(n) +
+2.0 \cdot z_{\text{total bytes}}(n) +
+2.5 \cdot z_{\text{external ratio}}(n) +
+2.0 \cdot z_{\text{degree}}(n) +
+2.0 \cdot z_{\text{avg flow duration}}(n) +
+2.5 \cdot z_{\text{role score}}(n) +
+2.0 \cdot z_{\text{community size}}(n) +
+2.0 \cdot z_{\text{flows}}(n) -
+2.0 \cdot z_{\text{session volatility}}(n) -
+1.5 \cdot z_{\text{ttl variability}}(n)
+\]
 
 With artifact-specific adjustments for **avg_flow_duration(n)**:
 
 | Artifact Type            | Adjustment |
-| ------------------------ | ---------- |
+|--------------------------|------------|
 | Baremetal                | +2.0       |
 | VM                       | +1.5       |
 | Orchestrated / Mini VM   | 0          |
@@ -61,22 +71,16 @@ With artifact-specific adjustments for **avg_flow_duration(n)**:
 
 ---
 
-### Cloud Workload-Level Artifact Recommendation (Louvain Community)
+## Final Output
 
-For each cloud workload *W* (Louvain community), I infer artifacts by:
-- Taking the **majority vote** of the node-level top artifacts within *W*.
-- Computing **artifact diversity metrics**:
-  - **Entropy**:  
+- For each **workload_id**, I recommend the **most suitable deployment artifact** (e.g., baremetal, VM, container, serverless) based on this scoring system.
+- **Louvain community** and **component type** are used as **features**, not as alternative workload units.
+- The result is a **per-workload deployment artifact recommendation** that captures both **network behavior** and **graph topology**.
 
-$$
-H(W) = - \sum_{a} p(a) \cdot \log p(a)
-$$
+---
 
-  Where p(a) = proportion of nodes in *W* with artifact *a*.
-  - **Unique Artifact Count** = Number of distinct artifacts in *W*.
+This approach reflects the **most granular unit of workload analysis possible in network data**. It enables **data-driven deployment artifact recommendations** aligned with **cloud workload definition**.
 
-
-- This provides a **single recommended artifact** for *W* (via majority vote) and a **diversity signal** to detect mixed workloads.
 ---
 
 FOR LINEAR SCORING SYSTEM
