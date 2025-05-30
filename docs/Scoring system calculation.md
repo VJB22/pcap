@@ -1,77 +1,70 @@
-  ## Linear Scoring Formula for Deployment Artifact Inference
+# Deployment Artifact Scoring Formula
 
-We create a general formula where each artifact type is assigned a score profile across graph-derived features (find score distribution across all nodes -> empirical it is defined by my dataset):
-
-**General formula**:
-
-S(n) = ∑(i=1 to k) wᵢ ⋅ fᵢ(n)
-
-Where:
-
-- **S(n)** = Artifact score for node *n*
-- **fᵢ(n)** = Graph-derived feature *i* for node *n*
-- **wᵢ** = Feature weight, theory-driven and empirically adjusted
+We use a **linear scoring model** to assign deployment artifact recommendations to nodes and cloud workloads. This model combines graph-derived features with theory-driven, empirically adjusted weights.
 
 ---
 
-### Feature Mapping (Based on Cloud Deployment Artifact Document)
+### General Formula (Unified)
 
-| **Feature**             | **Graph Signal**                    | **Why It Matters**                                               | **Weight (wᵢ)**                                        |
-|--------------------------|------------------------------------|------------------------------------------------------------------|------------------------------------------------------------|
-| **Degree**              | deg(n)                              | High degree → stable, connected workload → VM/Baremetal          | +1.5 VM/Baremetal; -1.5 Serverless                         |
-| **Community Size**      | size of community C(n)              | Large clusters → Orchestrated; Singleton → Serverless             | +2.0 Orchestrated; -2.0 Serverless                         |
-| **Flows per Node**      | total flows for node n              | High flows → Dedicated resources                                  | +1.5 Baremetal; +1.0 VM                                    |
-| **Session Volatility**  | session volatility for node n       | High volatility → Ephemeral, stateless (Serverless)               | -2.0 Baremetal/VM; +2.0 Serverless                         |
-| **TTL Variability**     | TTL variability for node n          | High TTL variance → Cloud, bursty, external systems               | -1.5 Baremetal/VM; +1.5 Serverless                         |
-| **Component Type Score**| topological score (e.g., Singleton=1, Chain=2, Cluster=3) | Graph topology pattern → Artifact hint                            | +2.0 Orchestrated/Containers; 0 Baremetal                   |
-| **Data Volume**         | total bytes sent/received by node n | High data → Baremetal/VM                                          | +1.5 Baremetal/VM                                          |
-| **External Flow Ratio** | external flows / total flows        | High → Cloud; Low → On-Prem                                       | +2.0 Cloud; -2.0 Baremetal/VM                              |
-| **Role Score**          | NMF latent role score for node n    | Latent embedding (NMF roles)                                      | w_role (tunable, e.g., +1.5)                               |
-| **Avg Flow Duration**   | average flow duration per node n    | Long → Persistent (Baremetal/VM); Short → Ephemeral (Serverless)  | +2.0 Baremetal; +1.5 VM; -2.0 Serverless; -1.5 Containers  |
----
+For both node-level and cloud workload-level:
 
-### Final Scoring Formula
-
-For each node *n*:
-
-S(n) = 1.5 * deg(n) + 2.0 * |C(n)| + 1.5 * flows(n) - 2.0 * sv(n) - 1.5 * ttl(n) + 2.0 * comp(n) + 1.5 * bytes(n) + 2.0 * external_ratio(n) + wrole * role_score(n)+ d * avg_flow_duration(n)
-\]
+$$
+S_{artifact}(x) = \sum_{i=1}^{k} w_i \cdot f_i(x)
+$$
 
 Where:
-
-- **deg(n)** = Degree of node
-- **|C(n)|** = Community size
-- **flows(n)** = Sum of flows across edges
-- **sv(n)** = Session volatility
-- **ttl(n)** = TTL variability
-- **comp(n)** = Component type score
-- **bytes(n)** = Total bytes sent/received
-- **external_ratio(n)** = Ratio of external flows to total flows
-- **role_score(n)** = Role membership from NMF (continuous or categorical)
-- **wrole** = Is the weight assigned to this role feature (chosen according to its importance)
-- **avg_flow_duration(n)** = Average flow duration per node
-
-Where:
-- \( d \) = Time weight for `avg_flow_duration(n)`:
-  - **+2.0** for Baremetal
-  - **+1.5** for VM
-  - **0** for Orchestrated / Mini VM (neutral)
-  - **-1.5** for Containers
-  - **-2.0** for Serverless
+- **S_{artifact}(x)** = Linear score for a specific artifact type, computed for node *n* or cloud workload *W*
+- **wᵢ** = Weight for feature *i* (theory-driven, empirically adjusted)
+- **fᵢ(x)** = Graph-derived feature *i* for node or workload
 
 ---
 
-### Threshold Heuristics for Artifact Classification
+### Node-Level Scoring (Per Workload Node)
 
-| Artifact      | Score Range (Example)         | Dominant Traits                                         |
-|---------------|-------------------------------|----------------------------------------------------------|
-| Baremetal     | Highest (>90th percentile)    | High degree, stable flows, low volatility                |
-| VM            | High (70th–90th percentile)   | Moderate degree, stable flows, mid-size communities      |
-| Orchestrated  | Mid-High (50th–70th percentile) | Clustered, variable degree, external flows               |
-| Container     | Mid (30th–50th percentile)    | Dense clusters, moderate volatility                       |
-| Mini-VM       | Mid-Low (10th–30th percentile) | Chain-like, small communities                             |
-| Serverless    | Low (<10th percentile)        | Singleton, low degree, high volatility, bursty flows      |
+For each node *n*, features are **Z-score normalized**:
 
+$$
+z_i(n) = \frac{f_i(n) - \mu_i}{\sigma_i}
+$$
+
+The node-level artifact scoring formula is:
+
+$$
+S(n) = 3 \cdot z_{component\_type\_score}(n) + 2 \cdot z_{bytes}(n) + 2.5 \cdot z_{external\_ratio}(n) + 2 \cdot z_{degree}(n) + 2 \cdot z_{avg\_flow\_duration}(n) + 2.5 \cdot z_{role\_score}(n) + 2.0 \cdot z_{community\_size}(n) + 2.0 \cdot z_{flows}(n) - 2.0 \cdot z_{session\_volatility}(n) - 1.5 \cdot z_{ttl\_variability}(n)
+$$
+
+With an artifact-specific adjustment for **avg_flow_duration(n)**:
+
+$$
+d =
+\begin{cases}
++2.0 & \text{Baremetal} \\
++1.5 & \text{VM} \\
+0 & \text{Orchestrated / Mini VM} \\
+-1.5 & \text{Container} \\
+-2.0 & \text{Serverless}
+\end{cases}
+$$
+
+---
+
+### Cloud Workload-Level Scoring (Per Group of Nodes)
+
+For each cloud workload *W* (Louvain community), features are **raw aggregated metrics** (no normalization):
+
+$$
+S(W) = 3.0 \cdot max\_degree(W) + 2.0 \cdot mean\_bytes(W) + 2.5 \cdot max\_external\_ratio(W) + 2.0 \cdot total\_flows(W) + 2.0 \cdot mean\_avg\_flow\_duration(W) + 2.5 \cdot mean\_role\_score(W) - 1.5 \cdot mean\_session\_volatility(W) - 1.0 \cdot mean\_ttl\_variability(W)
+$$
+
+Where:
+- **max_degree(W)** = Maximum degree of nodes in *W*
+- **mean_bytes(W)** = Mean bytes across nodes in *W*
+- **max_external_ratio(W)** = Maximum external ratio across nodes in *W*
+- **total_flows(W)** = Total flows across all nodes in *W*
+- **mean_avg_flow_duration(W)** = Mean average flow duration across nodes in *W*
+- **mean_role_score(W)** = Mean role score across nodes in *W*
+- **mean_session_volatility(W)** = Mean session volatility across nodes in *W*
+- **mean_ttl_variability(W)** = Mean TTL variability across nodes in *W*
 
 
 
