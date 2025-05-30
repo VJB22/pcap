@@ -78,28 +78,3 @@ While the composite scoring framework in this work draws inspiration from the co
 https://www.catalyzex.com/paper/movie-recommendation-system-using-composite
 
 Similar to the use of composite ranking systems in movie recommendation systems, where heterogeneous signals like metadata, visual similarity, and sentiment analysis are integrated into a unified score (Mehta, Kamdar, 2022), this work applies a composite scoring framework to graph-based workload graphs. The resulting scores reflect theoretical characteristics of deployment artifacts, guiding the inference of suitable deployment types for each workload.
-
-------------
-Barabási, A.-L. (2016). Network Science. 
-(For network metrics: degree, community size, topology patterns)
-
-Newman, M. E. J. (2010). Networks: An Introduction. Oxford University Press. https://doi.org/10.1093/acprof:oso/9780199206650.001.0001
-(For foundational graph metrics and models)
-
-Li, D., Zhuang, Y., & Li, J. (2018). A comparative study of containers and virtual machines in big data environment. arXiv preprint arXiv:1807.01842. https://arxiv.org/abs/1807.01842
-(For empirical differences in performance between containers and VMs)
-
-Zhang, Y., & Zhang, Y. (2018). Container-based cluster orchestration systems: A taxonomy and future directions. arXiv preprint arXiv:1807.06193. https://arxiv.org/abs/1807.06193
-(For understanding orchestrated containers and dynamic scaling)
-
-Gao, M., & Agrawal, D. (2024). Cost modelling and optimisation for cloud: A graph-based approach. Journal of Cloud Computing, 13(1), Article 7. https://doi.org/10.1186/s13677-024-00709-6
-(For graph-based modeling of resource allocation and cost in cloud systems)
-
-Sharma, S., & Kumari, R. (2023). Graph-based models for multi-tenant security in cloud computing. International Journal of Cloud Applications and Computing, 13(1), 45–61. https://www.researchgate.net/publication/388394135
-(For graph models in cloud multi-tenant environments and isolation)
-
-Khan, R. A., & Abbas, A. (2022). A survey on graph neural networks for microservice-based cloud applications. Sensors, 22(23), 9492. https://doi.org/10.3390/s22239492
-(For graph models applied to microservices in cloud systems)
-
-Cloud Deployment Artifacts and Workload Optimization. (2024). Internal Industry Knowledge Document.
-(For transdisciplinary heuristic mappings of deployment artifacts based on operational patterns)
