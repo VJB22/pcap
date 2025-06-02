@@ -1,69 +1,51 @@
 # Cloud Engineer Validation Guide: Understanding the Dataset Columns
 
+
 ## What This Dataset Is
 
-This dataset contains **workload-level information**, extracted from **PCAP network traffic**. Each **row** is a unique workload (an application, service, or machine), identified by MAC, IP, and port.  
-
-The dataset maps **network behavior to deployment artifacts** (like containers, VMs, bare metal) based on observed communication patterns.
-
----
-
-## Column-by-Column Explanation
-
-| **Column** | **Plain Language Meaning** | **Why It Matters** |
-|------------|---------------------------|--------------------|
-| `inferred_artifact_type` | Our best guess for what kind of deployment it is | E.g., "baremetal", "vm", "container" |
-| `artifact_type_ranked` | Ranked list of likely deployment types | Shows other possibilities, like a top-3 |
-| `artifact_type_top_score` | Score for the top-ranked guess (closer to 1 = stronger match) | Confidence in the top guess |
-| `artifact_type_entropy` | How certain we are about the guess (lower = better) | 0.2 = high confidence, 1.0 = uncertain |
-
-### Network Behavior Columns
-
-| **Column** | **Plain Language Meaning** | **Example/Interpretation** |
-|------------|---------------------------|---------------------------|
-| `degree` | How many other workloads this one talks to | High = core service; low = edge workload |
-| `flow_count` | Number of communication flows | High = busy API or server; low = passive client |
-| `community_size` | Size of the cluster this workload belongs to (via Louvain detection) | Large = microservices group; small = isolated service |
-| `burstiness` | Is the workload’s traffic spiky (1) or stable (0)? | Bursty → serverless; stable → VM/baremetal |
-| `session_length` | How long sessions last on average | Long = stable VM/backend; short = serverless/microservice |
-| `peer_count` | Number of unique peers (destinations) the workload connects to | High = API, load balancer; low = isolated service |
-| `data_volume` | Total bytes sent/received | High = data-intensive workload (e.g., DB, analytics) |
-
-### Additional Context Columns
-
-| **Column** | **Plain Language Meaning** | **Example/Interpretation** |
-|------------|---------------------------|---------------------------|
-| `is_virtual_machine` | Flag: Is this workload likely virtual? | Based on MAC OUI or IP reuse |
-| `is_data_intensive` | Flag: Sends/receives a lot of data | High-volume workloads (e.g., DB, file servers) |
-| `is_stable_workload` | Flag: Low volatility, long sessions | Backend, VM-like workloads |
-| `is_bursty_dst` | Flag: Destination has bursty traffic | Suggests serverless or event-driven pattern |
-| `is_compliance_sensitive` | Flag: Internal, stable, long sessions | Compliance-relevant workloads (e.g., databases) |
+This dataset contains **workload-level insights**, built from PCAP traffic.  
+Each row is a **workload (node)**—a unique application, service, or machine, identified by MAC, IP, and port.  
+The model combines network signals into **artifact type guesses** (e.g., bare metal, VM, container) for **workload optimization**.  
 
 ---
 
-## What You’ll See in the Data
+## Column Explanations (Final Dataset)
 
-Here’s a **sample row** to help you orient yourself:
+| **Column** | **Plain Language Meaning** | **Example** |
+|------------|----------------------------|-------------|
+| `workload_id_node` | Unique workload ID (hash of MAC, IP, port) | `abc123...` |
+| `degree` | Number of other workloads this node talks to | 12 = core API; 2 = edge client |
+| `flows` | Total number of communication flows | 100 = active; 5 = light |
+| `session_volatility` | Stability of session lengths (higher = more volatile) | 0.3 = stable; 1.2 = bursty |
+| `ttl_variability` | Variability in TTL (suggests dynamic infra) | 1.5 = unstable; 0.2 = stable |
+| `component_type` | Detected system role (e.g., router, switch, client) | `external_router`, `internal_router`, `client` |
+| `external_ratio` | % of traffic going outside the network | 0.9 = mostly external; 0.1 = mostly internal |
+| `role_score` | Graph-based role strength (from NMF) | 0.8 = core service; 0.2 = peripheral |
+| `avg_flow_duration` | Average session duration (in seconds) | 300 = long; 10 = short |
+| `community` | Louvain community ID (cluster) | 5 = grouped with 5 other nodes |
+| `top_artifact` | Best guess for deployment type | `vm`, `container`, `baremetal` |
+| `artifact_confidence` | Confidence level (lower = better) | 0.2 = high certainty; 0.8 = uncertain |
+| `top_artifact_score` | Score for the top-ranked guess (0-1) | 0.85 = strong match |
+| `artifact_ranking` | Ordered list of artifact guesses | `["container", "vm", "baremetal"]` |
 
-| inferred_artifact_type | artifact_type_ranked | artifact_type_entropy | degree | flow_count | community_size | burstiness | session_length | peer_count | data_volume |
-|------------------------|----------------------|-----------------------|--------|------------|----------------|------------|----------------|------------|-------------|
-| vm                     | ["vm", "baremetal"]  | 0.3                   | 10     | 150        | 8              | 0          | Long (seconds) | 5          | 1 GB        |
-| serverless             | ["serverless", "container"] | 0.6             | 2      | 20         | 3              | 1          | Short (seconds) | 1          | 100 MB      |
+### Source/Destination Identifiers (for cross-checking)
+| **Column** | **Meaning** | Example |
+|------------|-------------|---------|
+| `workload_id_src` | Source workload ID | Hash of MAC, IP, port |
+| `mac_src` | Source MAC address | `00:1A:2B:3C:4D:5E` |
+| `ip_src` | Source IP address | `192.168.1.5` |
+| `src_port` | Source port | 443 |
+| `workload_id_dst` | Destination workload ID | Hash of MAC, IP, port |
+| `mac_dst` | Destination MAC address | `00:1A:2B:3C:4D:5F` |
+| `ip_dst` | Destination IP address | `10.0.0.1` |
+| `dst_port` | Destination port | 8080 |
 
 ---
 
-## What I Need From You
+## What to Check
 
-✅ Review if these **artifact guesses** make sense:  
-- Are high-degree, stable workloads really **bare metal** or **VM** in your world?  
-- Are bursty, short-session workloads realistically **serverless**?  
-- Do high-peer workloads match **API gateways** in practice?  
-
-✅ Spot any **surprises or mismatches**:  
-- Any workloads labeled **container** that seem more like **VMs**?  
-- Any missing patterns that you’d expect?  
-
-✅ **Feedback on usability**:  
-- Would this help your team with placement, security, optimization, or migration?  
-
----
+✅ Do **high-degree, stable workloads** align with **bare metal or VM** in your experience?  
+✅ Are **bursty, short-session workloads** realistically **serverless**?  
+✅ Do **high-peer workloads** look like **APIs/gateways** in practice?  
+✅ Spot **mismatches**: Any containers that feel like VMs, or vice versa?  
+✅ Any patterns you’d expect but don’t see?  
