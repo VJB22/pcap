@@ -21,7 +21,7 @@ The model combines **network signals** into **deployment artifact guesses** (e.g
 | `external_ratio` | % of traffic going outside the network | 0.9 = mostly external; 0.1 = mostly internal |
 | `role_score` | Graph-based role strength (from NMF) | 0.8 = core service; 0.2 = peripheral |
 | `avg_flow_duration` | Average session duration (in seconds) | 300 = long; 10 = short |
-| `community` | Louvain community ID (cluster) | 5 = grouped with 5 other nodes |
+| `community` Why it matters: Nodes in the same community likely belong to the same system or service (e.g., Kubernetes pods, web app cluster). If a node is alone (singleton), it may be a standalone system like a bare metal server. | Louvain community ID (cluster) | 5 = grouped with 5 other nodes |
 | `top_artifact` | Best guess for deployment type | `vm`, `container`, `baremetal` |
 | `artifact_confidence` | Confidence level (lower = better) | 0.2 = high certainty; 0.8 = uncertain |
 | `top_artifact_score` | Score for the top-ranked guess (0-1) | 0.85 = strong match |
