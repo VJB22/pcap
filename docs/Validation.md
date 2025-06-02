@@ -1,11 +1,10 @@
-# Cloud Engineer Validation Guide: Understanding the Dataset Columns
-
+# Cloud Engineer Validation Guide: Final Dataset Columns
 
 ## What This Dataset Is
 
-This dataset contains **workload-level insights**, built from PCAP traffic.  
+This dataset is a **workload-level model** built from PCAP traffic.  
 Each row is a **workload (node)**—a unique application, service, or machine, identified by MAC, IP, and port.  
-The model combines network signals into **artifact type guesses** (e.g., bare metal, VM, container) for **workload optimization**.  
+The model combines **network signals** into **deployment artifact guesses** (e.g., bare metal, VM, container) for **workload optimization**.  
 
 ---
 
@@ -18,7 +17,7 @@ The model combines network signals into **artifact type guesses** (e.g., bare me
 | `flows` | Total number of communication flows | 100 = active; 5 = light |
 | `session_volatility` | Stability of session lengths (higher = more volatile) | 0.3 = stable; 1.2 = bursty |
 | `ttl_variability` | Variability in TTL (suggests dynamic infra) | 1.5 = unstable; 0.2 = stable |
-| `component_type` | Detected system role (e.g., router, switch, client) | `external_router`, `internal_router`, `client` |
+| `component_type` | Detected **topology pattern** (e.g., Hub/Star, Chain, Isolated) | `Hub/Star` = central node communicating with many others |
 | `external_ratio` | % of traffic going outside the network | 0.9 = mostly external; 0.1 = mostly internal |
 | `role_score` | Graph-based role strength (from NMF) | 0.8 = core service; 0.2 = peripheral |
 | `avg_flow_duration` | Average session duration (in seconds) | 300 = long; 10 = short |
@@ -42,7 +41,7 @@ The model combines network signals into **artifact type guesses** (e.g., bare me
 
 ---
 
-## What to Check
+### What to Check
 
 ✅ Do **high-degree, stable workloads** align with **bare metal or VM** in your experience?  
 ✅ Are **bursty, short-session workloads** realistically **serverless**?  
