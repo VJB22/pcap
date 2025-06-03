@@ -10,7 +10,7 @@ The model assigns **deployment artifact guesses** (bare metal, VM, container, et
 
 ## Column Explanations (Final Dataset)
 
-| **Column**            | **Plain Language Meaning**                                         | **Why It Matters**                                                                 | **Example**                           |
+| **Column**            | **Meaning**                                         | **Why It Matters**                                                                 | **Example**                           |
 |-----------------------|-------------------------------------------------------------------|------------------------------------------------------------------------------------|---------------------------------------|
 | `workload_id_node`    | Unique workload ID (hash of MAC, IP, port)                         | Identifies each workload so you can track it across the dataset.                   | abc123...                              |
 | `degree`              | Number of other workloads this node talks to                      | High = core service; low = edge client. Shows how connected a workload is.         | 12 = core API; 2 = edge client        |
