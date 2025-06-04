@@ -54,43 +54,13 @@ The model assigns **deployment artifact guesses** (bare metal, VM, container, et
 
 
 
-| Artifact       | Abstraction Level       | Expected Graph Behavior                                                                                          | Workload Traits                          |
-|----------------|--------------------------|-------------------------------------------------------------------------------------------------------------------|------------------------------------------|
-| Baremetal      | Hardware-level           | Very high degree (10k+)  
-Very high flows  
-Low role score (hub)  
-Moderate TTL variance  
-Mixed external ratio                       | Stable workload  
-Core infrastructure                        |
-| VMs            | OS-level                 | Very low degree  
-Low flows  
-Highest role score (periphery)  
-Medium TTL variance  
-Very low external ratio                  | Stable workload  
-Compliance-sensitive                      |
-| Containers     | Process-level            | Medium degree  
-High session volatility  
-Moderate flows  
-High TTL variance  
-Low external ratio                        | Variable workload  
-Dynamic deployment                        |
-| Orchestrated   | Multi-container app      | Medium-high degree  
-Very high flow count  
-High TTL variance  
-Mixed external ratio  
-Medium role score                        | Variable workload  
-Data-intensive                            |
-| Mini-VMs       | Lightweight VM           | Very low degree  
-Very low flows  
-Longest flow durations  
-Low TTL variance  
-Very low external ratio                 | Stable workload  
-Batch/long-running                        |
-| Serverless     | Function-level (high)    | Low degree  
-High external ratio (~1.0)  
-Shortest flow durations  
-High session volatility  
-Low role score                           | Bursty workload  
-Stateless compute                         |
+| Artifact       | Abstraction Level       | Expected Graph Behavior                                                                                          | Workload Traits                        |
+|----------------|--------------------------|-------------------------------------------------------------------------------------------------------------------|----------------------------------------|
+| Baremetal      | Hardware-level           | Very high degree (10k+), very high flows, low role score (hub), moderate TTL variance, mixed external ratio       | Stable workload, core infrastructure   |
+| VMs            | OS-level                 | Very low degree, low flows, highest role score (periphery), medium TTL variance, very low external ratio          | Stable workload, compliance-sensitive  |
+| Containers     | Process-level            | Medium degree, high session volatility, moderate flows, high TTL variance, low external ratio                     | Variable workload, dynamic deployment  |
+| Orchestrated   | Multi-container app      | Medium-high degree, very high flow count, high TTL variance, mixed external ratio, medium role score             | Variable workload, data-intensive      |
+| Mini-VMs       | Lightweight VM           | Very low degree, very low flows, longest flow durations, low TTL variance, very low external ratio                | Stable workload, batch/long-running    |
+| Serverless     | Function-level (high)    | Low degree, high external ratio (~1.0), shortest flow durations, high session volatility, low role score          | Bursty workload, stateless compute     |
 
 
