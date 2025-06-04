@@ -49,28 +49,34 @@ print(conf_summary.to_frame(name='Confidence Margin').to_markdown())
 
 
 # === 7.1.2 FEATURE INTERPRETATION: Boxplots by Artifact Type ===
+
+# Compute how many nodes are in each community
+comm_counts = df_2['community'].value_counts().to_dict()
+# Map size back to each node
+df_2['community_size'] = df_2['community'].map(comm_counts)
+
 features = [
     'degree', 'flows', 'session_volatility', 'ttl_variability',
-    'external_ratio', 'role_score', 'avg_flow_duration'
+    'external_ratio', 'role_score', 'avg_flow_duration', 'community_size'
 ]
-artifact_col = 'top_artifact'
 
-for feat in features:
-    plt.figure(figsize=(8, 6))
-    sns.boxplot(x=artifact_col, y=feat, data=df_2)
-    plt.xticks(rotation=45)
-    plt.title(f'{feat} by {artifact_col}')
-    plt.tight_layout()
-    plt.show()
-    
-summary = df_2.groupby('top_artifact')[features].agg(['mean', 'std', 'min', 'max'])
-print(summary.round(2).to_markdown())
+# Numeric stats
+summary_numeric = df_2.groupby('top_artifact')[features].agg(['mean', 'std', 'min', 'max'])
 
-# === 7.1.2 FEATURE INTERPRETATION: Correlation Analysis ===
-plt.figure(figsize=(8, 6))
-sns.heatmap(df_2[features].corr(), annot=True, cmap='coolwarm')
-plt.title("Feature Correlation Heatmap")
-plt.show()
+# Component type mode per artifact
+summary_component = df_2.groupby('top_artifact')['component_type'].agg(lambda x: x.mode().iloc[0])
+
+# Combine both
+summary_numeric[('component_type', 'mode')] = summary_component
+summary_combined = summary_numeric.copy()
+
+# Flatten column names
+summary_combined.columns = [
+    f"{col[0]}_{col[1]}" if isinstance(col, tuple) else col for col in summary_combined.columns
+]
+
+summary_combined = summary_combined.round(2)
+print(summary_combined.to_markdown())
 
 
 
@@ -126,4 +132,3 @@ plt.show()
 div_table = community_diversity.value_counts().sort_index().reset_index()
 div_table.columns = ['# Unique Artifact Types', '# Communities']
 print(div_table.to_markdown(index=False))
-
