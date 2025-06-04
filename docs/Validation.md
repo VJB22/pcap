@@ -65,3 +65,16 @@ The model assigns **deployment artifact guesses** (bare metal, VM, container, et
 | **Baremetal**             | - Full hardware control  <br> - No abstraction  <br> - Highest performance  <br> - Manual scaling  <br> - Full isolation and admin rights | - Low volatility  <br> - Long-lived, heavy flows  <br> - Low external ratio  <br> - Central nodes  <br> - Very stable degree and flow patterns | - Data-intensive workloads  <br> - Compliance-bound workloads  <br> - High throughput  <br> - Internal-only communication | - `degree_SD` (very low)  <br> - `flow_duration_mean` (very high)  <br> - `external_ratio_mean` (very low)  <br> - `total_bytes` (high) |
 
 
+### Descriptive statistics of graph-based features per artifact type
+
+| Artifact      | Degree (M) | Degree (SD) | Degree (Min) | Degree (Max) | Flows (M) | Flows (SD) | Flows (Min) | Flows (Max) | Session vol. (M) | Session vol. (SD) | TTL var. (M) | TTL var. (SD) | Ext. ratio (M) | Ext. ratio (SD) | Role score (M) | Flow dur. (M) |
+|---------------|-------------|--------------|----------------|----------------|-------------|--------------|----------------|----------------|---------------------|----------------------|----------------|------------------|--------------------|----------------------|------------------|----------------|
+| VM            | 1.05        | 0.23         | 1              | 3              | 2.99        | 5.47         | 2              | 340            | 3171.18              | 878.90               | 14.36          | 8.28             | 0.038              | 0.169                | 64.25            | 51.72          |
+| Baremetal     | 10911.30    | 8856.94      | 1              | 18459          | 25911.60    | 20020.20     | 1              | 147506         | 2765.00              | 801.10               | 12.38          | 5.82             | 0.278              | 0.408                | 3.20             | 287.40         |
+| Container     | 30.63       | 59.66        | 1              | 164            | 1705.70     | 5004.93      | 1              | 24288          | 2246.60              | 899.64               | 22.88          | 10.58            | 0.085              | 0.263                | 9.12             | 26.03          |
+| Mini_vm       | 1.20        | 0.40         | 1              | 2              | 11.82       | 118.17       | 2              | 2043           | 1684.83              | 953.38               | 6.92           | 2.92             | 0.026              | 0.124                | 19.16            | 567.27         |
+| Orchestrated  | 7.66        | 14.62        | 1              | 45             | 92889.50    | 410057.00    | 1              | 2000000        | 1591.84              | 804.20               | 33.20          | 19.08            | 0.320              | 0.432                | 6.21             | 28.30          |
+| Serverless    | 4.73        | 8.96         | 1              | 74             | 149.53      | 467.79       | 1              | 8563           | 1935.58              | 798.06               | 7.76           | 6.13             | 0.948              | 0.168                | 9.25             | 45.31          |
+
+**Note:** M = mean; SD = standard deviation; Min = minimum; Max = maximum.
+
