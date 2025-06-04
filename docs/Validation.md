@@ -45,7 +45,7 @@ The model assigns **deployment artifact guesses** (bare metal, VM, container, et
 ---
 
 ## What to Check
-
+✅ Does it follow the expected graph patterns (as explained below)?
 ✅ Do high-degree, stable workloads align with bare metal or VM in your experience?  
 ✅ Are bursty, short-session workloads realistically serverless?  
 ✅ Do high-peer workloads look like APIs/gateways in practice?  
