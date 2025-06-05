@@ -60,14 +60,14 @@ Each metric was subjected to a set of heuristic thresholds in order to facilitat
 
 | Metric                   | Low      | Medium     | High       | Very High |
 |--------------------------|----------|------------|------------|------------|
-| Degree (Mean)            | < 5      | 5–30       | 30–100     | > 100     |
-| Flows (Mean/Max)         | < 10     | 10–500     | 500–5000   | > 5000    |
-| Session Volatility (SD)  | < 0.3    | 0.3–0.8    | 0.8–1.2    | > 1.2     |
-| TTL Variability (Mean)   | < 5      | 5–15       | 15–30      | > 30      |
-| External Ratio (Mean)    | < 0.3    | 0.3–0.7    | 0.7–0.9    | > 0.9     |
-| Flow Duration (Mean)     | < 1 s    | 1–10 s     | 10–100 s   | > 100 s   |
-| Role Mean                | < 5      | 5–30       | 30–60      | > 60      |
-| Community Size (Mean)    | < 10     | 10–100     | 100–1000   | > 1000    |
+| Degree             | < 5      | 5–30       | 30–100     | > 100     |
+| Flows         | < 10     | 10–500     | 500–5000   | > 5000    |
+| Session Volatility   | < 0.3    | 0.3–0.8    | 0.8–1.2    | > 1.2     |
+| TTL Variability   | < 5      | 5–15       | 15–30      | > 30      |
+| External Ratio     | < 0.3    | 0.3–0.7    | 0.7–0.9    | > 0.9     |
+| Flow Duration     | < 1 s    | 1–10 s     | 10–100 s   | > 100 s   |
+| Role Score                | < 5      | 5–30       | 30–60      | > 60      |
+| Community Size     | < 10     | 10–100     | 100–1000   | > 1000    |
 
 These qualitative mappings enable interpretability in the linear scoring model and support transparent justification of classification logic. While initially heuristic, they form a critical layer in bridging abstract graph roles and practical deployment behavior. Their refinement is left as future work.
 
