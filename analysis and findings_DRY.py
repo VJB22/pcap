@@ -18,7 +18,7 @@ df = pd.read_parquet("C:/Users/baroc/Downloads/all_workloads_CICIDS.parquet")
 df = df.dropna(subset=['mac_src', 'ip_src', 'src_port', 'mac_dst', 'ip_dst', 'dst_port'])
 
 # === Load Artifact Classification Output ===
-df_2 = pd.read_csv("C:/Users/baroc/Downloads/artifact_exploration_node.csv")
+df_2 = pd.read_csv("C:/Users/baroc/Downloads/final_workload_node_dataset.csv")
 print(df_2.columns.tolist())
 
 
