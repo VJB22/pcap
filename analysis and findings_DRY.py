@@ -8,6 +8,7 @@ import pickle
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 # === Load Graph ===
 with open("graph_model_CICIDS_log.pkl", "rb") as f:
@@ -58,6 +59,25 @@ for feat in features:
 
 summary_1 = df_2.groupby('top_artifact')[features].agg(['mean', 'std', 'min', 'max']).round(2)
 print(summary_1.to_markdown())
+
+# === BOOTSTRAP 95% CI for Artifact-Wise Feature Means ===
+def bootstrap_ci(data, n_bootstraps=1000, ci=95):
+    boot_means = np.array([
+        data.sample(frac=1, replace=True).mean()
+        for _ in range(n_bootstraps)
+    ])
+    lower = np.percentile(boot_means, (100 - ci) / 2, axis=0)
+    upper = np.percentile(boot_means, 100 - (100 - ci) / 2, axis=0)
+    return lower, upper
+
+print("\n=== Bootstrap 95% CI for Artifact-wise Feature Means ===")
+for artifact in df_2['top_artifact'].unique():
+    artifact_data = df_2[df_2['top_artifact'] == artifact][features]
+    lower, upper = bootstrap_ci(artifact_data)
+    ci_df = pd.DataFrame({'Lower 95% CI': lower, 'Upper 95% CI': upper}, index=features)
+    print(f"\nArtifact: {artifact}")
+    print(ci_df.round(2).to_markdown())
+
 
 # === 7.1.2 FEATURE INTERPRETATION: Correlation Analysis ===
 plt.figure(figsize=(8, 6))
@@ -112,6 +132,7 @@ plt.show()
 div_table = community_diversity.value_counts().sort_index().reset_index()
 div_table.columns = ['# Unique Artifact Types', '# Communities']
 print(div_table.to_markdown(index=False))
+
 
 
 
