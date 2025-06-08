@@ -114,3 +114,4 @@ div_table.columns = ['# Unique Artifact Types', '# Communities']
 print(div_table.to_markdown(index=False))
 
 
+
