@@ -71,15 +71,18 @@ define approx. what very low, low, moderate, high, very high mean in values or r
 
 # mapping deployment artifacts levels with graph metrics
 
-**Abstraction Level** ≈ session volatility + external ratio + flow duration  
-**Resource Allocation** ≈ flow volume + role score + community size + TTL variability  
-**Startup Time** ≈ flow duration + session volatility  
-**Performance** ≈ flow volume + degree + role score  
-**Isolation** ≈ external ratio + flow duration + session volatility  
-**State Management** ≈ volatility + flow durations + internal flow ratio  
-**Scaling** ≈ TTL variability + session volatility  
-**Management Overhead** ≈ community size + flow durations + component structure  
-**Cost Model** ≈ external ratio + flow durations + flow volume
+| **Deployment Characteristic** | **Graph-Based Indicators** | **Explanation** |
+|------------------------------|----------------------------|-----------------|
+| **Abstraction Level** | session volatility + external ratio + flow duration | More abstract workloads (e.g., serverless) tend to be bursty (high volatility), short-lived, and heavily externally connected. |
+| **Resource Allocation** | flow volume + role score + community size + TTL variability | Indicates intensity and variability of usage; higher values suggest dynamic resource demands and role differentiation. |
+| **Startup Time** | flow duration + session volatility | Short-lived and bursty patterns suggest rapid instantiation and teardown, typical of ephemeral workloads. |
+| **Performance** | flow volume + degree + role score | High throughput, large peer set, and strong structural embedding reflect heavy-duty or performance-critical workloads. |
+| **Isolation** | external ratio + flow duration + session volatility | Low external exposure and stable flows imply better isolation; high values signal shared or exposed environments. |
+| **State Management** | session volatility + flow duration + internal flow ratio | Stateful systems have more stable, long-lived, internal interactions, with low volatility. |
+| **Scaling** | TTL variability + session volatility | Frequent changes in TTL and session patterns point to elastic or auto-scaling behavior. |
+| **Management Overhead** | community size + flow duration + component structure | Large, persistent clusters with structured topologies often indicate orchestration and management overhead. |
+| **Cost Model** | external ratio + flow duration + flow volume | High communication with the outside world, persistent activity, and high data volume imply higher costs. |
+
 
 
 
