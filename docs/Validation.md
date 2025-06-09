@@ -56,40 +56,38 @@ The model assigns **deployment artifact guesses** (bare metal, VM, container, et
 ## Threshold Mapping for Metric Interpretation
 Each metric was subjected to a set of heuristic thresholds in order to facilitate the interpretation of raw graph-derived features in the context of deployment artifact exploration. According to these thresholds, a variety of structural and behavioral indicators seen in the workload graph can be classified as low, medium, high, or very high. 
 
-# Preliminary Heuristic Thresholds for Metric Interpretation
 
-| Metric                   | Low      | Medium     | High       | Very High |
-|--------------------------|----------|------------|------------|------------|
-| Degree             | < 5      | 5–30       | 30–100     | > 100     |
-| Flows         | < 10     | 10–500     | 500–5000   | > 5000    |
-| Session Volatility   | < 0.3    | 0.3–0.8    | 0.8–1.2    | > 1.2     |
-| TTL Variability   | < 5      | 5–15       | 15–30      | > 30      |
-| External Ratio     | < 0.3    | 0.3–0.7    | 0.7–0.9    | > 0.9     |
-| Flow Duration     | < 1 s    | 1–10 s     | 10–100 s   | > 100 s   |
-| Role Score                | < 5      | 5–30       | 30–60      | > 60      |
-| Community Size     | < 10     | 10–100     | 100–1000   | > 1000    |
+# TO-Do
 
-These qualitative mappings enable interpretability in the linear scoring model and support transparent justification of classification logic. While initially heuristic, they form a critical layer in bridging abstract graph roles and practical deployment behavior. Their refinement is left as future work.
+define approx. what very low, low, moderate, high, very high mean in values or ranges.
 
 
-### Deployment Artifact + Workload Optimization with Graph Indicators
 
-| Aspect                         | Serverless                                       | Containers                                     | Orchestrated Containers                        | VMs                                              | Mini-VMs                                          | Baremetal                                           |
-|--------------------------------|--------------------------------------------------|------------------------------------------------|--------------------------------------------------|--------------------------------------------------|---------------------------------------------------|-----------------------------------------------------|
-| Abstraction Level             | Function-level (high)                            | Process-level                                  | Multi-container app                             | OS-level virtualization                          | Lightweight OS virtualization                      | Hardware-level (no abstraction)                     |
-| Resource Allocation           | Fully managed, ephemeral                         | Shared kernel                                  | Dynamic via orchestrator                        | Dedicated resources                              | Lower overhead per VM                              | Full machine control                                 |
-| Startup Time                  | Milliseconds                                     | Seconds                                        | Seconds                                         | Minutes                                          | Milliseconds                                       | Instant (if running)                                 |
-| Performance                   | High (cold start penalty)                        | High                                           | High                                            | Moderate to high                                 | High                                               | Highest                                               |
-| Isolation                     | Low (multi-tenant)                               | Moderate (namespaces)                          | Moderate to high (policies)                     | Strong (hardware-based)                          | Strong (lightweight isolation)                     | None (full access)                                    |
-| State Management              | Stateless                                        | Usually stateless                              | Managed via volumes                             | Managed with storage                             | Managed with storage                               | Full control                                          |
-| Scaling                       | Automatic                                        | Manual/scripted                                | Auto via orchestrator                           | Manual                                           | Fast auto-scaling                                  | Manual                                                |
-| Management Overhead           | Lowest (fully managed)                           | Moderate (manual setup)                        | High (orchestration complexity)                 | High (OS, networking)                            | Moderate                                           | Highest (full admin lifecycle)                        |
-| Cost Model                    | Pay-per-use                                      | Resource-based pricing                         | Resource-based pricing                          | Pay per VM uptime                                | Pay per lightweight VM                             | Fixed cost (CapEx hardware)                           |
-| Workload Optimization Signals | Bursty, volatile, external-facing, short-lived   | Mid-stable, flexible, reused connections       | Structured, stable, high-throughput             | Compliance-heavy, stable, long-lived            | Hybrid, burst-handling, scalable                  | Throughput-intensive, compliance-bound, internal-only |
-| Expected Graph Behavior       | Low degree, high session volatility, short flows, high external ratio | Medium degree, reused flows, medium session volatility, mixed internal/external | High degree max, large flows, dense internal, structured clusters | Stable degree, long flows, low volatility, internal-only | Short-medium flows, mixed volatility, moderate community structure | Central nodes, high flow volume, low external ratio, stable graph roles |
-| What to Look At (final dataset) | Degree low, Session vol. high, Ext. ratio  high, Flow dur. low | Degree medium, Flows medium, Ext. ratio medium, Session vol. medium | Degree  high, TTL var. high, Flows very high, Ext. ratio medium | Degree very low, Flow dur. high, Ext. ratio  low, TTL var.  low | Flow dur.  medium-high, Session vol.  high, Ext. ratio  medium | Degree very high, Flows very high, Ext. ratio very low, TTL var. low 
-| **Community Type (component type)**            | Star                                             | Hub                                             | Star                                            | Hub                                              | Star                                               | Hub                                                   |
-| **Community Size Behavior**   | Small to Medium                                  | Small                                           | Medium to Large                                 | Very Large                                       | Medium                                             | Very Large                                             |
+
+
+# mapping workload opimization considerations
+
+**Variable Workloads (bursty)** ≈ high session volatility + high TTL variability + high external ratio + short flow duration  
+**Stable Workloads** ≈ low session volatility + low TTL variability + internal-only flows + long flow durations  
+**Data-Intensive Workloads** ≈ high byte volume per node + high flow count  
+**Compliance-Sensitive Workloads** ≈ internal-only edges + low external ratio + long-lived flows
+
+
+
+# mapping deployment artifacts levels with graph metrics
+
+**Abstraction Level** ≈ session volatility + external ratio + flow duration  
+**Resource Allocation** ≈ flow volume + role score + community size + TTL variability  
+**Startup Time** ≈ flow duration + session volatility  
+**Performance** ≈ flow volume + degree + role score  
+**Isolation** ≈ external ratio + flow duration + session volatility  
+**State Management** ≈ volatility + flow durations + internal flow ratio  
+**Scaling** ≈ TTL variability + session volatility  
+**Management Overhead** ≈ community size + flow durations + component structure  
+**Cost Model** ≈ external ratio + flow durations + flow volume
+
+
+
 
 
 
