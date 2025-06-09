@@ -56,13 +56,8 @@ The model assigns **deployment artifact guesses** (bare metal, VM, container, et
 ## Threshold Mapping for Metric Interpretation
 Each metric was subjected to a set of heuristic thresholds in order to facilitate the interpretation of raw graph-derived features in the context of deployment artifact exploration. According to these thresholds, a variety of structural and behavioral indicators seen in the workload graph can be classified as low, medium, high, or very high. 
 
-
 # TO-Do
-
 define approx. what very low, low, moderate, high, very high mean in values or ranges.
-
-
-
 
 
 # mapping workload opimization considerations
