@@ -133,6 +133,38 @@ div_table = community_diversity.value_counts().sort_index().reset_index()
 div_table.columns = ['# Unique Artifact Types', '# Communities']
 print(div_table.to_markdown(index=False))
 
+# === Find thresholds in node-level dataset with Non-uniform Qunatile Binning + visual check ===
+
+metrics_for_traits = [
+    'session_volatility', 'ttl_variability', 'avg_flow_duration',
+    'external_ratio', 'role_score', 'flows', 'degree', 'community_size'
+]
+
+custom_bins = {
+    'session_volatility': [1, 1500, 3500, df_2['session_volatility'].max()],
+    'ttl_variability': [0, 5, 20, df_2['ttl_variability'].max()],
+    'avg_flow_duration': [0, 0.1, 300, df_2['avg_flow_duration'].max()],
+    'external_ratio': [0, 0.01, 0.99, 1.0],
+    'role_score': [0.005, 0.1, 10, df_2['role_score'].max()],
+    'flows': [1, 10, 1000, df_2['flows'].max()],
+    'degree': [1, 5, 100, df_2['degree'].max()],
+    'community_size': [2, 50, 1000, df_2['community_size'].max()]
+}
+
+labels = ['low', 'medium', 'high']
+
+for metric, bins in custom_bins.items():
+    try:
+        df_2[f"{metric}_level"] = pd.cut(
+            df_2[metric], bins=bins, labels=labels, include_lowest=True
+        )
+
+        print(f"\n--- {metric.upper()} LEVEL THRESHOLDS ---")
+        thresholds = df_2[[metric, f"{metric}_level"]].groupby(f"{metric}_level", observed=True)[metric].agg(['min', 'max'])
+        print(thresholds)
+
+    except Exception as e:
+        print(f"Could not bin {metric}: {e}")
 
 
 
