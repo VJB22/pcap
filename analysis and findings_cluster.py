@@ -16,6 +16,7 @@ from sklearn.metrics import silhouette_score
 import umap.umap_ as umap
 import hdbscan
 import optuna
+from scipy.stats import entropy
 
 # ----------------------------- data ------------------------------
 df = pd.read_csv("final_workload_node_dataset_2.csv")
@@ -181,6 +182,63 @@ def save_umap_example_cluster(df, cluster_id, fname):
     plt.tight_layout()
     plt.savefig(os.path.join(script_dir, fname), dpi=300)
     plt.close()
+
+
+# save_umap_example_cluster(df, 14, "UMAP_Cluster14.png")
+# save_umap_example_cluster(df, 7, "UMAP_Cluster7.png")
+
+
+save_umap_all(df, "UMAP_All_Clusters_WithNoise.png", "UMAP Projection (Including Noise)")
+    
+    
+
+    
+    
+    
+    
+# ------------------ Structural Interpretation ------------------
+df_struct = df.dropna(subset=["community", "component_type"])
+community_dist = df_struct.groupby("cluster_hdbscan")["community"].value_counts().unstack(fill_value=0)
+component_dist = df_struct.groupby("cluster_hdbscan")["component_type"].value_counts().unstack(fill_value=0)
+component_dist_pct = component_dist.div(component_dist.sum(axis=1), axis=0).round(2)
+
+print("\n=== Topological Community Distribution ===\n")
+print(community_dist.head(10).to_markdown())
+
+print("\n=== Component Type Distribution (counts) ===\n")
+print(component_dist.head(10).to_markdown())
+
+print("\n=== Component Type Distribution (percentages) ===\n")
+print(component_dist_pct.head(10).to_markdown())
+
+# ------------------ Extended Cluster Summary ------------------
+summary = df.groupby("cluster_hdbscan")[features].agg(["mean", "std", "min", "max"]).round(2)
+summary["n_unique_communities"] = df_struct.groupby("cluster_hdbscan")["community"].nunique()
+print("\n=== Extended Cluster Summary ===\n")
+print(summary.head(10).to_markdown())
+
+# ------------------ UMAP Colored by Top Communities (Including Noise) ------------------
+top_comms = df["community"].value_counts().nlargest(10).index
+df_plot = df.copy()
+df_plot["community_plot"] = df_plot["community"].where(df_plot["community"].isin(top_comms), "Other")
+
+plt.figure(figsize=(10, 7))
+sns.scatterplot(data=df_plot, x="umap1", y="umap2", hue="community_plot", palette="tab10", s=15)
+plt.title("UMAP Projection Colored by Community (Top 10 + Other, Including Noise)")
+plt.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=6, fontsize="x-small", title="Community", title_fontsize="x-small")
+plt.tight_layout()
+plt.savefig(os.path.join(script_dir, "UMAP_Top10_Communities_WithNoise.png"), dpi=300)
+plt.close()
+
+# ------------------ Community Diversity (Entropy) ------------------
+community_stats = (
+    df_struct.groupby("cluster_hdbscan")["community"]
+    .agg(n_unique="nunique", entropy=lambda x: entropy(x.value_counts(normalize=True)))
+    .sort_values("n_unique", ascending=False)
+    .round(2)
+    .head(10)
+)
+print(community_stats.to_markdown())
 
 
 # save_umap_example_cluster(df, 14, "UMAP_Cluster14.png")
