@@ -239,10 +239,3 @@ community_stats = (
     .head(10)
 )
 print(community_stats.to_markdown())
-
-
-# save_umap_example_cluster(df, 14, "UMAP_Cluster14.png")
-# save_umap_example_cluster(df, 7, "UMAP_Cluster7.png")
-
-
-save_umap_all(df, "UMAP_All_Clusters_WithNoise.png", "UMAP Projection (Including Noise)")
