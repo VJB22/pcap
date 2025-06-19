@@ -13,6 +13,8 @@ import os
 import pandas as pd
 import duckdb
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 
 def extract_fields(row):
@@ -112,6 +114,7 @@ def classify_flow(src, dst):
         return 'external_only'
     return 'unknown'
 
+# Hash, but also keep the original tuple separately for workload tracking
 def build_workload_id_src(e):
     parts = [
         str(e.get("mac_src", "")),
@@ -179,6 +182,9 @@ def stream_process_json(json_path, out_parquet):
             entry['has_icmp'] = entry['icmp_type'] is not None
             entry['has_igmp'] = entry['igmp_type'] is not None
             entry['has_arp'] = entry['arp_src_hw_mac'] is not None
+            # if (entry['mac_src'] is None or entry['ip_src'] is None or entry['src_port'] is None or
+            #     entry['mac_dst'] is None or entry['ip_dst'] is None or entry['dst_port'] is None):
+            #     continue
 
             buffer.append(entry)
 
@@ -490,8 +496,8 @@ def stream_process_json(json_path, out_parquet):
 
 
 # ---------------- Entry Point ----------------
-json_file = "C:/Users/baroc/Downloads/full_capture/full_capture.json"
-parquet_file = "C:/Users/baroc/Downloads/all_workloads.parquet"
+json_file = "C:/Users/baroc/Downloads/full_capture_CICIDS.json"
+parquet_file = "C:/Users/baroc/Downloads/all_workloads_CICIDS.parquet"
 
 if os.path.exists(parquet_file):
     os.remove(parquet_file)
@@ -501,7 +507,7 @@ stream_process_json(json_file, parquet_file)
 
 # ---------------DUCKDB: VIEW DATA & SAVE --------
 # Load the Parquet file
-parquet_file = "C:/Users/baroc/Downloads/all_workloads.parquet"
+parquet_file = "C:/Users/baroc/Downloads/all_workloads_CICIDS.parquet"
 con = duckdb.connect()
 
 # Helper function for labeled output
@@ -514,6 +520,20 @@ show("Sample Preview (20 rows)", f"""
     SELECT * FROM parquet_scan('{parquet_file}') LIMIT 20
 """)
 
+# === MISSING VALUES CHECK ===
+columns = [row[0] for row in con.execute(f"DESCRIBE SELECT * FROM parquet_scan('{parquet_file}')").fetchall()]
+query = f"""
+    SELECT {', '.join([f"SUM(CASE WHEN {col} IS NULL THEN 1 ELSE 0 END) AS {col}_missing" for col in columns])}
+    FROM parquet_scan('{parquet_file}')
+"""
+
+# Flatten and reshape the output to match show() format
+missing_df = con.execute(query).df().T.reset_index()
+missing_df.columns = ['Column', 'Missing Count']
+missing_df = missing_df.sort_values(by='Missing Count', ascending=False).reset_index(drop=True)
+
+print("\n==== MISSING VALUES SUMMARY ====")
+print(missing_df)
 
 # workloads (initiators vs responders)
 show("WORKLOADS: Count of Source and Destination Workloads", f"""
@@ -702,3 +722,51 @@ example_path = "C:/Users/baroc/Downloads/example_head20.csv"
 df_head = con.execute(f"SELECT * FROM parquet_scan('{parquet_file}') LIMIT 20").df()
 df_head.to_csv(example_path, index=False)
 print(f"Saved: {example_path}")
+
+
+
+# === Load Data ===
+df = pd.read_parquet("C:/Users/baroc/Downloads/all_workloads_CICIDS.parquet")
+ 
+# === Check for Missing Data ===
+print("\n=== Missing Data Summary ===")
+print(df[['workload_id_src', 'workload_id_dst', 'mac_src', 'ip_src', 'src_port', 'mac_dst', 'ip_dst', 'dst_port']].isna().sum())
+print("\n=== Non-NaN Counts ===")
+print(df[['workload_id_src', 'workload_id_dst', 'mac_src', 'ip_src', 'src_port', 'mac_dst', 'ip_dst', 'dst_port']].notna().sum())
+
+# === EDA ===
+
+# === Frame Size Distribution ===
+plt.figure(figsize=(8,5))
+plt.hist(df['frame_len'].dropna(), bins=100, density=True, alpha=0.7)
+plt.title("Frame Size Distribution")
+plt.xlabel("Frame Size (bytes)")
+plt.ylabel("Density")
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+
+# === TTL Values Distribution ===
+plt.figure(figsize=(8,5))
+ttl_data = df['ip_ttl'].dropna()
+plt.hist(ttl_data, bins=range(0, 256, 1), density=True, alpha=0.7, color='orange')
+plt.title("TTL Values Distribution")
+plt.xlabel("TTL (Hops)")
+plt.ylabel("Density")
+plt.xlim(0, 255)
+plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True, nbins=10))
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+# === Fan-In vs Fan-Out (Sample 1000 Flows) ===
+sample_df = df[['peer_count_src', 'peer_count_dst']].dropna().sample(n=1000, random_state=42)
+plt.figure(figsize=(8,5))
+plt.scatter(sample_df['peer_count_src'], sample_df['peer_count_dst'], alpha=0.6)
+plt.title("Fan-In vs Fan-Out (Sample of 1000 Flows)")
+plt.xlabel("Fan-Out (Unique Destinations)")
+plt.ylabel("Fan-In (Unique Sources)")
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
