@@ -11,21 +11,22 @@ import os
 import glob
 from tqdm.auto import tqdm
 
+
 # === CONFIG ===
 tshark_path = r"C:\\Program Files\\Wireshark\\tshark.exe"
 editcap_path = r"C:\\Program Files\\Wireshark\\editcap.exe"
 capinfos_path = r"C:\\Program Files\\Wireshark\\capinfos.exe"
 
-pcap_file = "test.pcapng"
+pcap_file = "bigFlows.pcap"
 batch_dir = "batches"
-output_json = "full_capture.json"
+output_json = "full_capture_bigFlows.json"
 batch_size = 1000
 
 os.makedirs(batch_dir, exist_ok=True)
 
 # === Step 1: Split PCAP ===
-split_pattern = os.path.join(batch_dir, "batch_%03d.pcapng")
-if not glob.glob(os.path.join(batch_dir, "*.pcapng")):
+split_pattern = os.path.join(batch_dir, "batch_%03d.pcap")
+if not glob.glob(os.path.join(batch_dir, "*.pcap")):
     print("Splitting PCAP...")
     subprocess.run([editcap_path, "-c", str(batch_size), pcap_file, split_pattern])
 else:
@@ -35,12 +36,13 @@ else:
 capinfos_result = subprocess.run(
     [capinfos_path, pcap_file],
     stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    text=True
+    stderr=subprocess.PIPE
 )
+stdout = capinfos_result.stdout.decode('utf-8', errors='replace')
+
 file_metadata = {
     k.strip().replace(" ", "_").lower(): v.strip()
-    for line in capinfos_result.stdout.strip().splitlines()
+    for line in stdout.strip().splitlines()
     if ':' in line
     for k, v in [line.split(':', 1)]
 }
@@ -52,38 +54,33 @@ def flatten_packet(pkt, file_metadata):
     layers = pkt.get("_source", {}).get("layers", {})
 
     allowed_protocols = {
-    # Layer 2 & 3
-    "frame", "eth", "ethertype", "dot1q", "llc", "stp", "mpls", "ip", "ipv6", "arp",
+        # Layer 2 & 3
+        "frame", "eth", "ethertype", "dot1q", "llc", "stp", "mpls", "ip", "ipv6", "arp",
 
-    # Layer 4
-    "tcp", "udp", "icmp", "icmpv6",
+        # Layer 4
+        "tcp", "udp", "icmp", "icmpv6",
 
-    # Transport/Tunneling/VPN
-    "ipsec", "gre", "vxlan", "l2tp", "pptp", "openvpn",
+        # Transport/Tunneling/VPN
+        "ipsec", "gre", "vxlan", "l2tp", "pptp", "openvpn",
 
-    # Common Application Protocols
-    "http", "http2", "tls", "ssl", "quic",
-    "dns", "bootp", "dhcp", "ldap", "ntp",
-    "ssdp", "nbns", "mdns", "smb", "kerberos",
-    "ftp", "telnet", "smtp", "pop", "imap",
+        # Common Application Protocols
+        "http", "http2", "tls", "ssl", "quic",
+        "dns", "bootp", "dhcp", "ldap", "ntp",
+        "ssdp", "nbns", "mdns", "smb", "kerberos",
+        "ftp", "telnet", "smtp", "pop", "imap",
 
-    # Real-time Streaming / VoIP
-    "rtsp", "rtp", "rtcp", "sip",
+        # Real-time Streaming / VoIP
+        "rtsp", "rtp", "rtcp", "sip",
 
-    # IoT / Messaging
-    "mqtt", "coap", "diameter",
+        # IoT / Messaging
+        "mqtt", "coap", "diameter",
 
-    # Financial Industry Protocols
-    "fix",           # Financial Information Exchange
-    "swift",         # SWIFT messaging
-    "iso8583",       # Payment card transaction format
-    "cme",           # CME/market data proprietary formats
-    "bloomberg",     # Bloomberg terminals
-    "marketdata",    # Generic tag for market data feeds
+        # Financial Industry Protocols
+        "fix", "swift", "iso8583", "cme", "bloomberg", "marketdata",
 
-    # Generic Data Container (unparsed payloads)
-    "data"
-}
+        # Generic Data Container (unparsed payloads)
+        "data"
+    }
 
     for proto, fields in layers.items():
         if proto not in allowed_protocols:
@@ -103,7 +100,7 @@ def flatten_packet(pkt, file_metadata):
     return row
 
 # === Step 3: Process and stream-write packets ===
-batch_files = sorted(glob.glob(os.path.join(batch_dir, "*.pcapng")))
+batch_files = sorted(glob.glob(os.path.join(batch_dir, "*.pcap")))
 
 print("Processing batches and writing packets to JSON...")
 
@@ -130,16 +127,17 @@ with open(output_json, "w", encoding="utf-8") as out_f:
                 "--enable-protocol", "tls"
             ],
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
+            stderr=subprocess.PIPE
         )
 
-        if not result.stdout.strip():
+        stdout = result.stdout.decode('utf-8', errors='replace')
+
+        if not stdout.strip():
             print("Empty batch — skipping.")
             continue
 
         try:
-            packets = json.loads(result.stdout)
+            packets = json.loads(stdout)
         except json.JSONDecodeError:
             print("JSON error — skipping.")
             continue
