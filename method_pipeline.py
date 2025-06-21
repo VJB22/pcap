@@ -69,27 +69,60 @@ for n in nodes:
     G.nodes[n]['avg_flow_duration'] = np.mean(durs) if durs else 0
 
 # === ReFeX + NMF ===
+
 neighbors = {n: set(G.neighbors(n)) for n in nodes}
 refex = pd.DataFrame({
     'degree': [G.degree(n) for n in nodes],
     'egonet_size': [G.degree(n) + 1 for n in nodes],
-    'egonet_edges': [sum(1 for u in neighbors[n] for v in neighbors[u] if v in neighbors[n]) for n in nodes],
-    'egonet_out_edges': [sum(1 for v in neighbors[n] if any(nb not in neighbors[n] for nb in G.neighbors(v))) for n in nodes]
+    'egonet_edges': [
+        sum(1 for u in neighbors[n] for v in neighbors[u] if v in neighbors[n])
+        for n in nodes
+    ],
+    'egonet_out_edges': [
+        sum(1 for v in neighbors[n]
+            if any(nb not in neighbors[n] for nb in G.neighbors(v)))
+        for n in nodes
+    ]
 }, index=nodes)
 
 for _ in range(3):
     refex = pd.DataFrame({
-        n: {f'mean_{k}': refex.loc[list(neighbors[n])][k].mean() if neighbors[n] else 0 for k in refex.columns} |
-           {f'max_{k}': refex.loc[list(neighbors[n])][k].max() if neighbors[n] else 0 for k in refex.columns}
+        n: {
+            f'mean_{k}': refex.loc[list(neighbors[n])][k].mean() if neighbors[n] else 0
+            for k in refex.columns
+        } | {
+            f'max_{k}': refex.loc[list(neighbors[n])][k].max() if neighbors[n] else 0
+            for k in refex.columns
+        }
         for n in nodes
     }).T.fillna(0)
 
 X = refex.values
-best_n = range(2, 10)[np.argmin([
-    np.linalg.norm(X - NMF(n, init='random', random_state=42).fit_transform(X)
-                    .dot(NMF(n, init='random', random_state=42).fit(X).components_), ord='fro') for n in range(2, 10)])]
-W = NMF(best_n, init='random', random_state=42).fit_transform(X)
+
+# === NMF: fit once per k and select best ===
+errors = []
+models = []
+for k in range(2, 10):
+    model = NMF(k, init='random', random_state=42)
+    W_tmp = model.fit_transform(X)
+    H_tmp = model.components_
+    errors.append(np.linalg.norm(X - W_tmp @ H_tmp, ord='fro'))
+    models.append(model)
+
+best_idx = int(np.argmin(errors))
+best_model = models[best_idx]
+best_n = list(range(2, 10))[best_idx]
+
+# Final role matrices
+W = best_model.transform(X)
+H = best_model.components_
+
+# === Store scalar node role score ===
 nx.set_node_attributes(G, dict(zip(nodes, np.mean(W, axis=1))), 'role_score')
+
+# === Store full H matrix for role interpretation ===
+G.graph['role_definitions'] = H  # shape: (k × features)
+
 
 # === Louvain + Component Type ===
 communities = louvain_communities(G, weight='weight', seed=42)
@@ -134,9 +167,20 @@ def extract_node_features(G):
 node_features = extract_node_features(G)
 node_meta_filtered = node_meta[node_meta['workload_id'].isin(G.nodes())]
 df_node_final = node_meta_filtered.merge(node_features, on='workload_id', how='left')
-df_node_final.to_csv("final_workload_node_dataset_2.csv", index=False)
+
+# === Add primary role and role description from NMF ===
+primary_role = W.argmax(axis=1)
+H_df = pd.DataFrame(H, columns=refex.columns)
+top_features = {
+    i: ", ".join(H_df.loc[i].nlargest(3).index)
+    for i in range(H.shape[0])
+}
+df_node_final['primary_role'] = primary_role
+df_node_final['role_description'] = df_node_final['primary_role'].map(top_features)
+
+df_node_final.to_csv("final_workload_node_dataset_3.csv", index=False)
 print(df_node_final.head())
 
 # save model
-with open("graph_model_CICIDS_cd.pkl", "wb") as f:
+with open("graph_model_CICIDS_cd_H.pkl", "wb") as f:
      pickle.dump(G, f)
