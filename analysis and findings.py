@@ -16,54 +16,86 @@ import umap.umap_ as umap
 import hdbscan
 import optuna
 from scipy.stats import entropy
+from scipy.stats import skew
 
 # ----------------------------- data ------------------------------
-df = pd.read_csv("final_workload_node_dataset_2.csv")
-features = [
-    "degree", "flows", "session_volatility", "ttl_variability",
-    "external_ratio", "role_score", "avg_flow_duration"
-]
+
+df = pd.read_csv("final_workload_node_dataset_3.csv")
+features = ["degree", "flows", "session_volatility", "ttl_variability",
+            "external_ratio", "role_score", "avg_flow_duration"]
+
+df_clean = df.dropna(subset=features)
+skew_vals = df_clean[features].apply(skew).sort_values(ascending=False)
+print(skew_vals[abs(skew_vals) > 1])
+
+for col in skew_vals[abs(skew_vals) > 1].index:
+    df[f"{col}_log"] = np.log10(df[col].clip(lower=1e-3))
+    
+features = [f"{col}_log" if f"{col}_log" in df.columns else col for col in features]
+
 feature_titles = {
-    "degree": "Node Degree",
-    "flows": "Flow Count",
+    "degree_log": "Log Node Degree",
+    "flows_log": "Log Flow Count",
     "session_volatility": "Session Volatility",
-    "ttl_variability": "TTL Variability",
+    "ttl_variability_log": "Log TTL Variability",
     "external_ratio": "External Communication Ratio",
     "role_score": "Inferred Role Score",
-    "avg_flow_duration": "Average Flow Duration"
+    "avg_flow_duration_log": "Log Average Flow Duration"
 }
-log_features = ["flows", "session_volatility", "avg_flow_duration"]
+
 df = df.dropna(subset=features)
 X_scaled = StandardScaler().fit_transform(df[features].values)
 
 # ----------------------- optuna search --------------------------
 
-study = optuna.create_study(direction="maximize")
-
 def objective(trial):
-    min_cluster_size = trial.suggest_int("min_cluster_size", 50, 600)
-    min_samples = trial.suggest_int("min_samples", 5, 100)
+    min_cluster_size = trial.suggest_categorical('min_cluster_size', [50, 100, 200, 300, 400])
+    min_samples = trial.suggest_categorical('min_samples', [5, 10, 20, 30, 50])
+    metric = trial.suggest_categorical('metric', ['euclidean', 'manhattan'])
+    cluster_selection_method = trial.suggest_categorical('cluster_selection_method', ['eom', 'leaf'])
 
-    hdb = hdbscan.HDBSCAN(
-        min_cluster_size=min_cluster_size,
-        min_samples=min_samples,
-        cluster_selection_method="eom"
-    )
-    labels = hdb.fit_predict(X_scaled)
-    n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+    try:
+        hdb = hdbscan.HDBSCAN(
+            min_cluster_size=min_cluster_size,
+            min_samples=min_samples,
+            metric=metric,
+            cluster_selection_method=cluster_selection_method
+        )
 
-    if n_clusters < 20 or n_clusters > 40:
+        labels = hdb.fit_predict(X_scaled)
+        n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+
+        if n_clusters < 15 or n_clusters > 50:
+            return float("-inf")
+
+        dbcv = hdbscan.validity.validity_index(X_scaled, labels)
+
+        if np.isnan(dbcv) or dbcv <= 0:
+            return float("-inf")
+
+        print(f" Clusters: {n_clusters} | DBCV: {dbcv:.4f} | "
+              f"min_cluster_size: {min_cluster_size}, min_samples: {min_samples}, "
+              f"metric: {metric}, method: {cluster_selection_method}")
+        return dbcv
+
+    except Exception as e:
+        print(f" Failed: {e}")
         return float("-inf")
 
-    dbcv = hdbscan.validity.validity_index(X_scaled, labels)
-    return dbcv
+# Run Optuna optimization
+study = optuna.create_study(direction="maximize")
+study.optimize(objective, n_trials=100, show_progress_bar=True)
 
-study.optimize(objective, n_trials=60, show_progress_bar=False)
-best_params = study.best_params
+# Output best parameters
+print("\n=== Best Parameters ===")
+print(study.best_params)
+print(f"Best DBCV: {study.best_value:.4f}")
 
 # ------------------- final hdbscan model ------------------------
-hdb = hdbscan.HDBSCAN(**best_params, cluster_selection_method="eom")
+best_params = study.best_params  # <-- define this
+hdb = hdbscan.HDBSCAN(**best_params)
 df["cluster_hdbscan"] = hdb.fit_predict(X_scaled)
+
 agg = AgglomerativeClustering(n_clusters=3)
 df["cluster_agg"] = agg.fit_predict(X_scaled)
 
@@ -74,47 +106,74 @@ top_10 = valid_clusters.head(10).index.tolist()
 bottom_10 = valid_clusters.tail(10).index.tolist()
 top_10_set, bottom_10_set = set(top_10), set(bottom_10)
 
-for f in log_features:
-    df[f"{f}_log"] = np.log10(df[f].clip(lower=1e-3))
-
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 def save_boxplot(data, feat, clust, ttl, fname):
     plt.figure(figsize=(10, 4))
     sns.boxplot(data=data, x="cluster_hdbscan", y=feat, order=clust, showfliers=True, palette="tab10")
     plt.title(ttl)
-    plt.xlabel("Cluster"); plt.ylabel(feat); plt.xticks(rotation=45)
-    plt.tight_layout(); plt.savefig(os.path.join(script_dir, fname), dpi=300); plt.close()
+    plt.xlabel("Cluster")
+    plt.ylabel(ttl)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(os.path.join(script_dir, fname), dpi=300)
+    plt.close()
 
 def save_scatter(sub, x, y, ttl, fname):
     plt.figure(figsize=(8, 6))
     sns.scatterplot(data=sub, x=x, y=y, hue="cluster_hdbscan", palette="tab20", s=15, legend="brief")
-    plt.title(ttl); plt.legend(loc="best", fontsize="x-small", ncol=2)
-    plt.tight_layout(); plt.savefig(os.path.join(script_dir, fname), dpi=300); plt.close()
+    plt.title(ttl)
+    plt.legend(loc="best", fontsize="x-small", ncol=2)
+    plt.tight_layout()
+    plt.savefig(os.path.join(script_dir, fname), dpi=300)
+    plt.close()
 
 for feat in features:
-    pf = f"{feat}_log" if f"{feat}_log" in df.columns else feat
-    save_boxplot(df[df["cluster_hdbscan"].isin(top_10_set)], pf, top_10,
-                 f"{feature_titles[feat]} (Top 10 Clusters)", f"{pf}_Top10.png")
-    save_boxplot(df[df["cluster_hdbscan"].isin(bottom_10_set)], pf, bottom_10,
-                 f"{feature_titles[feat]} (Bottom 10 Clusters)", f"{pf}_Bottom10.png")
+    pf = feat
+    title = feature_titles.get(pf, pf)
+    
+    save_boxplot(
+        df[df["cluster_hdbscan"].isin(top_10_set)], pf, top_10,
+        f"{title} (Top 10 Clusters)", f"{pf}_Top10.png"
+    )
+    
+    save_boxplot(
+        df[df["cluster_hdbscan"].isin(bottom_10_set)], pf, bottom_10,
+        f"{title} (Bottom 10 Clusters)", f"{pf}_Bottom10.png"
+    )
 
 for feat in features:
-    pf = f"{feat}_log" if f"{feat}_log" in df.columns else feat
-    means = df.groupby("cluster_hdbscan")[feat].mean()
+    pf = feat
+    title = feature_titles.get(pf, pf)
+    
+    means = df.groupby("cluster_hdbscan")[pf].mean()
     ranked_top = means.sort_values(ascending=False).head(10).index.tolist()
     ranked_bottom = means.sort_values().head(10).index.tolist()
+    
     fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
-    sns.boxplot(data=df[df["cluster_hdbscan"].isin(ranked_top)], x="cluster_hdbscan", y=pf,
-                order=ranked_top, showfliers=True, palette="tab10", ax=axes[0])
-    sns.boxplot(data=df[df["cluster_hdbscan"].isin(ranked_bottom)], x="cluster_hdbscan", y=pf,
-                order=ranked_bottom, showfliers=True, palette="tab10", ax=axes[1])
-    axes[0].set_title(f"Top 10 Clusters by Mean {feature_titles[feat]}")
-    axes[1].set_title(f"Bottom 10 Clusters by Mean {feature_titles[feat]}")
-    for ax in axes: ax.set_xlabel("Cluster"); ax.set_ylabel(pf); ax.tick_params(axis="x", rotation=45)
-    fig.suptitle(f"{feature_titles[feat]}: Cluster Comparison by Mean", fontsize=14)
+
+    sns.boxplot(
+        data=df[df["cluster_hdbscan"].isin(ranked_top)],
+        x="cluster_hdbscan", y=pf, order=ranked_top,
+        showfliers=True, palette="tab10", ax=axes[0]
+    )
+    axes[0].set_title(f"Top 10 Clusters by Mean {title}")
+
+    sns.boxplot(
+        data=df[df["cluster_hdbscan"].isin(ranked_bottom)],
+        x="cluster_hdbscan", y=pf, order=ranked_bottom,
+        showfliers=True, palette="tab10", ax=axes[1]
+    )
+    axes[1].set_title(f"Bottom 10 Clusters by Mean {title}")
+
+    for ax in axes:
+        ax.set_xlabel("Cluster")
+        ax.set_ylabel(title)
+        ax.tick_params(axis="x", rotation=45)
+
+    fig.suptitle(f"{title}: Cluster Comparison by Mean", fontsize=14)
     fig.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.savefig(os.path.join(script_dir, f"{feat}_TopVsBottom_Comparison.png"), dpi=300)
+    plt.savefig(os.path.join(script_dir, f"{pf}_TopVsBottom_Comparison.png"), dpi=300)
     plt.close()
 
 
@@ -253,5 +312,14 @@ community_stats_all = (
     .sort_values("n_unique", ascending=False)
     .round(2))
 
+
+# ------------------ Summary Table ------------------
+summary_2 = df.groupby("cluster_hdbscan")[features].agg(["mean"]).round(2)
+print("\n=== Summary Table ===\n")
+print(summary_2.to_markdown())
+
+
+n_clusters = df["cluster_hdbscan"].nunique()
+print(n_clusters)
 
 
