@@ -184,3 +184,59 @@ print(df_node_final.head())
 # save model
 with open("graph_model_CICIDS_cd_H.pkl", "wb") as f:
      pickle.dump(G, f)
+
+
+# ------ visualize and interpret H matrix ------
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+rename_map = {
+    # Degree
+    'μ_max_max_degree': 'Max Degree (3-hop)',
+    'μ_μ_max_degree': 'Mean–Max Degree (2-hop)',
+    'μ_max_μ_degree': 'Max–Mean Degree (2-hop)',
+    'μ_μ_μ_degree': 'Mean–Mean–Mean Degree',
+    'μ_max_μ_ego_size': 'Max–Mean Ego Size',
+    
+    # Ego Size
+    'μ_max_max_ego_size': 'Max Ego Size (3-hop)',
+    'μ_μ_max_ego_size': 'Mean–Max Ego Size (2-hop)',
+    'μ_μ_μ_ego_size': 'Mean–Mean–Mean Ego Size',
+    'μ_max_μ_ego_size': 'Max–Mean Ego Size (2-hop)',
+    
+    # Ego Out Edges
+    'μ_max_max_ego_out_edges': 'Max Ego Out Edges (3-hop)',
+    'μ_μ_max_ego_out_edges': 'Mean–Max Ego Out Edges',
+    'μ_max_μ_ego_out_edges': 'Max–Mean Ego Out Edges',
+    'μ_μ_μ_ego_out_edges': 'Mean–Mean–Mean Ego Out Edges',
+    
+    # Egonet Edges
+    'μ_max_max_egonet_edges': 'Max Egonet Edges (3-hop)',
+    'μ_μ_max_egonet_edges': 'Mean–Max Egonet Edges',
+    'μ_μ_μ_egonet_edges': 'Mean–Mean–Mean Egonet Edges',
+    
+    # Egonet Size
+    'μ_max_max_egonet_size': 'Max Egonet Size (3-hop)',
+    'μ_μ_max_egonet_size': 'Mean–Max Egonet Size',
+    'μ_μ_μ_egonet_size': 'Mean–Mean–Mean Egonet Size',
+    
+    # Egonet Out Edges
+    'μ_max_max_ego_out_edges': 'Max Ego Out Edges',
+    'μ_μ_max_ego_out_edges': 'Mean–Max Ego Out Edges',
+    'μ_μ_μ_ego_out_edges': 'Mean–Mean–Mean Ego Out Edges',
+}
+
+# Loop over roles and plot
+for i in range(H_df.shape[0]):
+    top_feats = H_df.iloc[i].sort_values(ascending=False).head(5)
+    
+    # Convert to Series, apply mapping, and fall back to original if no match
+    display_names = pd.Series(top_feats.index).map(rename_map).fillna(pd.Series(top_feats.index)).tolist()
+
+    plt.figure(figsize=(6, 3))
+    sns.barplot(x=top_feats.values, y=display_names, palette="viridis")
+    plt.title(f"Top Structural Features: Role {i}")
+    plt.xlabel("Weight")
+    plt.ylabel("")
+    plt.tight_layout()
+    plt.show()
