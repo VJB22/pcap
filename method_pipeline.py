@@ -240,3 +240,82 @@ for i in range(H_df.shape[0]):
     plt.ylabel("")
     plt.tight_layout()
     plt.show()
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# === Create H_df from your actual H matrix ===
+roles = [f"Role {i}" for i in range(H.shape[0])]
+H_df = pd.DataFrame(H, index=roles, columns=refex.columns)
+
+# === Apply renaming ===
+rename_map = {
+    'mean_mean_mean_degree': 'Mean–Mean–Mean Degree',
+    'mean_mean_mean_egonet_size': 'Mean–Mean–Mean Egonet Size',
+    'mean_mean_mean_egonet_edges': 'Mean–Mean–Mean Egonet Edges',
+    'mean_mean_mean_egonet_out_edges': 'Mean–Mean–Mean Out Edges',
+    'mean_mean_max_degree': 'Mean–Mean–Max Degree',
+    'mean_mean_max_egonet_size': 'Mean–Mean–Max Egonet Size',
+    'mean_mean_max_egonet_edges': 'Mean–Mean–Max Egonet Edges',
+    'mean_mean_max_egonet_out_edges': 'Mean–Mean–Max Out Edges',
+    'mean_max_mean_degree': 'Mean–Max–Mean Degree',
+    'mean_max_mean_egonet_size': 'Mean–Max–Mean Egonet Size',
+    'mean_max_mean_egonet_edges': 'Mean–Max–Mean Egonet Edges',
+    'mean_max_mean_egonet_out_edges': 'Mean–Max–Mean Out Edges',
+    'mean_max_max_degree': 'Mean–Max–Max Degree',
+    'mean_max_max_egonet_size': 'Mean–Max–Max Egonet Size',
+    'mean_max_max_egonet_edges': 'Mean–Max–Max Egonet Edges',
+    'mean_max_max_egonet_out_edges': 'Mean–Max–Max Out Edges',
+    'max_mean_mean_degree': 'Max–Mean–Mean Degree',
+    'max_mean_mean_egonet_size': 'Max–Mean–Mean Egonet Size',
+    'max_mean_mean_egonet_edges': 'Max–Mean–Mean Egonet Edges',
+    'max_mean_mean_egonet_out_edges': 'Max–Mean–Mean Out Edges',
+    'max_mean_max_degree': 'Max–Mean–Max Degree',
+    'max_mean_max_egonet_size': 'Max–Mean–Max Egonet Size',
+    'max_mean_max_egonet_edges': 'Max–Mean–Max Egonet Edges',
+    'max_mean_max_egonet_out_edges': 'Max–Mean–Max Out Edges',
+    'max_max_mean_degree': 'Max–Max–Mean Degree',
+    'max_max_mean_egonet_size': 'Max–Max–Mean Egonet Size',
+    'max_max_mean_egonet_edges': 'Max–Max–Mean Egonet Edges',
+    'max_max_mean_egonet_out_edges': 'Max–Max–Mean Out Edges',
+    'max_max_max_degree': 'Max–Max–Max Degree',
+    'max_max_max_egonet_size': 'Max–Max–Max Egonet Size',
+    'max_max_max_egonet_edges': 'Max–Max–Max Egonet Edges',
+    'max_max_max_egonet_out_edges': 'Max–Max–Max Out Edges',
+}
+H_df.rename(columns=rename_map, inplace=True)
+
+# === Get Top 5 Features per Role ===
+top_features_per_role = {
+    role: H_df.loc[role].sort_values(ascending=False).head(5)
+    for role in H_df.index
+}
+
+# === Build stacked DataFrame ===
+plot_df = pd.DataFrame(index=H_df.index)
+for role, series in top_features_per_role.items():
+    plot_df.loc[role, series.index] = series.values
+plot_df = plot_df.fillna(0)
+
+# === Normalize weights per role ===
+plot_df_norm = plot_df.div(plot_df.sum(axis=1), axis=0)
+
+# === Identify most frequent features among top 5 ===
+top_feature_names = plot_df.apply(lambda row: row.nlargest(5).index.tolist(), axis=1).explode()
+top_10_features = top_feature_names.value_counts().head(10).index
+
+# === Keep only top 10 in plot ===
+plot_df_norm = plot_df_norm[top_10_features]
+
+# === Plot ===
+fig, ax = plt.subplots(figsize=(12, 6))
+plot_df_norm.plot(kind='bar', stacked=True, ax=ax, colormap='tab20')
+
+ax.set_ylabel("Relative Feature Contribution (per Role)")
+ax.set_xlabel("Latent Role")
+ax.set_title("Top Contributing Features per Role (Top 10 Only)")
+ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', title="Feature")
+plt.tight_layout()
+plt.savefig("stacked_bar_roles_cleaned.png", dpi=300)
+plt.show()
